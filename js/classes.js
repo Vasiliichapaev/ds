@@ -1,13 +1,13 @@
 class Main {
     constructor(players_dict) {
         this.players = [];
+        this.heroes = [];
 
         for (let player_name in players_dict) {
             let player = new Player(player_name, players_dict[player_name]);
             this.players.push(player);
         }
 
-        this.heroes = [];
         this.selector = new Selector(this);
     }
 

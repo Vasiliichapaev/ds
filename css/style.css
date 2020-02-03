@@ -1,0 +1,153 @@
+body {
+    /* background-image: url("background.jpg");
+    background-attachment: fixed;
+    background-size: 100%; */
+    background-color: #2b8ef4;
+    font-family: Arial, Helvetica, sans-serif;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    display: flex;
+    flex-direction: column;
+    /* align-content: center; 
+    justify-content: center;  */
+    min-height: 100vh;
+    min-width: 1315px;
+}
+
+.content {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+    flex-direction: column;
+}
+
+.board {
+    position: relative;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;
+}
+
+.cell {
+    background-color: rgb(255, 247, 232);
+    width: 34px;
+    height: 28px;
+    text-align: center;
+    font-size: 20px;
+    display: flex;
+    margin-left: 2px;
+    margin-bottom: 2px;
+}
+
+.player-name {
+    background-color: rgb(255, 247, 232);
+    width: 120px;
+    height: 28px;
+    font-size: 20px;
+    padding-left: 5px;
+    display: flex;
+}
+
+.margin-auto {
+    margin: auto;
+}
+
+.player_name_container {
+    margin-top: 5px;
+}
+
+.wr {
+    background-color: rgb(255, 247, 232);
+    width: 90px;
+    height: 28px;
+    font-size: 20px;
+    margin-left: 2px;
+    margin-bottom: 2px;
+    display: flex;
+}
+
+.win {
+    color: darkgreen;
+    margin: auto;
+}
+
+.loose {
+    color: red;
+    margin: auto;
+}
+
+.selector-container {
+    position: relative;
+    width: 200px;
+}
+
+.selector-container:active .selector {
+    display: flex;
+}
+
+.selector:hover {
+    display: flex;
+    cursor: pointer;
+}
+
+.month-year {
+    display: flex;
+    justify-content: space-between;
+    font-size: 25px;
+    cursor: pointer;
+    padding: 5px;
+    color: azure;
+    flex-grow: initial;
+    background-color: #1e5bab;
+    margin: 5px;
+}
+
+.selector {
+    display: none;
+    width: 200px;
+    top: 0;
+    position: absolute;
+    background-color: #1e5bab;
+    z-index: 1;
+    padding: 5px;
+}
+
+.year-selector {
+    width: 40%;
+    border-right: #e6e5ed 3px solid;
+    font-size: 25px;
+}
+
+.month-selector {
+    width: 60%;
+    font-size: 20px;
+}
+
+.selectable-year {
+    border-bottom: #e6e5ed 1px solid;
+    text-align: center;
+}
+
+.selectable-month {
+    border-bottom: #e6e5ed 1px solid;
+    text-align: center;
+    height: 22px;
+}
+
+.selectable-year:hover {
+    color: azure;
+}
+
+.selectable-month:hover {
+    color: azure;
+}
+
+.selected {
+    color: azure;
+}

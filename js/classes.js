@@ -1,14 +1,20 @@
 class Main {
     constructor(players_dict) {
         this.players = [];
-        this.heroes = [];
-
         for (let player_name in players_dict) {
             let player = new Player(player_name, players_dict[player_name]);
             this.players.push(player);
         }
 
-        this.selector = new Selector(this);
+        this.heroes = [];
+
+        this.now = new Date();
+        this.now_year = this.now.getFullYear();
+        this.now_month = this.now.getMonth();
+        this.now_day = this.now.getDate();
+
+        this.table = new Table(this);
+        // this.date_seector = new DateSelector(this);
     }
 
     async load_data() {
@@ -29,7 +35,7 @@ class Main {
     }
 
     calculation() {
-        this.selector.current_month_obj.calculation();
+        this.table.calculation();
     }
 }
 
@@ -54,16 +60,13 @@ class Player {
     }
 }
 
-class Selector {
-    constructor(mainframe) {
-        this.main = mainframe;
+class DateSelector {
+    constructor(main) {
+        this.main = main;
+        this.table = table;
 
-        this.now = new Date();
-        this.current_year = this.now.getFullYear();
-        this.now_year = this.current_year;
-        this.now_month = this.now.getMonth();
-        this.current_month = this.now_month;
-        this.now_day = this.now.getDate();
+        this.current_year = main.now_year;
+        this.current_month = main.now_month;
 
         this.selector_div = document.querySelector(".selector");
         this.year_selector = document.querySelector(".year-selector");
@@ -138,134 +141,137 @@ class Selector {
     }
 }
 
-class MonthTable {
-    constructor(selector, year, month) {
-        this.selector = selector;
-        this.main = selector.main;
-        this.year = year;
-        this.month = month;
-        this.days = new Date(this.year, this.month + 1, 0).getDate();
-        this.start = new Date(this.year, this.month) / 1000;
-        this.end = this.start + this.days * 24 * 3600;
-        this.calc = false;
+class Table {
+    constructor(main) {
+        this.main = main;
+        this.div = document.querySelector(".table");
 
-        this.div = document.createElement("div");
-        this.div.classList.add("month-table");
+        this.year = main.now_year;
+        this.month = main.now_month;
 
-        this.head_row = new HeadRow(this);
         this.rows = [];
 
+        let head_row = new HeadRow(this);
+        this.div.append(head_row.div);
+        this.rows.push(head_row);
+
         for (let player of this.main.players) {
-            this.rows.push(new Row(this, player));
+            let row = new Row(this, player);
+            this.div.append(row.div);
+            this.rows.push(row);
         }
     }
 
     calculation() {
-        if (!this.calc) {
-            for (let row of this.rows) {
-                row.calculation();
-            }
-            this.calc = true;
+        this.days = new Date(this.year, this.month + 1, 0).getDate();
+        this.start = new Date(this.year, this.month) / 1000;
+        this.end = this.start + this.days * 24 * 3600;
+
+        for (let row of this.rows) {
+            row.calculation();
         }
     }
 }
 
-class HeadRow {
-    constructor(month) {
-        this.month = month;
+class Div {
+    constructor(...classes) {
+        this.div = this.create_div("", ...classes);
+    }
 
-        this.div = document.createElement("div");
-        this.div.classList.add("row");
-        month.div.append(this.div);
+    create_div(text, ...classes) {
+        let div = document.createElement("div");
+        div.innerHTML = text;
+        div.classList.add(...classes);
+        return div;
+    }
+}
 
-        let cell = document.createElement("div");
-        cell.classList.add("player-name");
+class HeadRow extends Div {
+    constructor(table) {
+        super("row");
+        this.table = table;
+        this.days = [];
+
+        let cell = this.create_div("", "player-name");
+        cell.append(this.create_div("Игроки", "margin-auto"));
         this.div.append(cell);
 
-        let player_name_head = document.createElement("div");
-        player_name_head.classList.add("margin-auto");
-        player_name_head.innerHTML = "Игроки";
-        cell.append(player_name_head);
-
-        for (let day = 1; day <= this.month.days; day++) {
-            let cell = document.createElement("div");
-            cell.classList.add("cell");
-            var day_number = document.createElement("div");
-            day_number.classList.add("margin-auto");
-            day_number.innerHTML = day;
-            cell.append(day_number);
+        for (let day = 1; day <= 31; day++) {
+            cell = this.create_div("", "cell");
+            cell.append(this.create_div(day, "margin-auto"));
             this.div.append(cell);
+            this.days.push(cell);
         }
 
-        cell = document.createElement("div");
-        cell.classList.add("cell");
+        cell = this.create_div("", "cell");
+        cell.append(this.create_div("W", "margin-auto"));
         this.div.append(cell);
 
-        day_number = document.createElement("div");
-        day_number.classList.add("margin-auto");
-        day_number.innerHTML = "W";
-        cell.append(day_number);
-
-        cell = document.createElement("div");
-        cell.classList.add("cell");
+        cell = this.create_div("", "cell");
+        cell.append(this.create_div("L", "margin-auto"));
         this.div.append(cell);
 
-        day_number = document.createElement("div");
-        day_number.classList.add("margin-auto");
-        day_number.innerHTML = "L";
-        cell.append(day_number);
+        cell = this.create_div("", "wr");
+        cell.append(this.create_div("W/(W+L)", "margin-auto"));
+        this.div.append(cell);
+    }
 
-        var wr = document.createElement("div");
-        wr.classList.add("wr");
-        this.div.append(wr);
+    calculation() {
+        for (let day = 31; day > 28; day--) {
+            this.days[day - 1].classList.remove("not-display");
+        }
 
-        var wr_container = document.createElement("div");
-        wr_container.classList.add("margin-auto");
-        wr_container.innerHTML = "W/(W+L)";
-        wr.append(wr_container);
+        for (let day = 31; day > this.table.days; day--) {
+            this.days[day - 1].classList.add("not-display");
+        }
     }
 }
 
-class Row {
-    constructor(month, player) {
-        this.month = month;
+class Row extends Div {
+    constructor(table, player) {
+        super("row");
+        this.table = table;
         this.player = player;
         this.days = [];
 
-        this.div = document.createElement("div");
-        this.div.classList.add("row");
-        month.div.append(this.div);
-
-        let cell = document.createElement("div");
-        cell.classList.add("player-name");
+        let cell = this.create_div("", "player-name");
+        cell.append(this.create_div(this.player.name, "player_name_container"));
         this.div.append(cell);
 
-        let player_name_container = document.createElement("div");
-        player_name_container.classList.add("player_name_container");
-        player_name_container.innerHTML = this.player.name;
-        cell.append(player_name_container);
-
-        for (let day = 1; day <= this.month.days; day++) {
-            this.days.push(new Cell(this, day));
+        for (let day = 1; day <= 31; day++) {
+            cell = new Cell(this, day);
+            this.div.append(cell.div);
+            this.days.push(cell);
         }
 
-        this.wins_cell = document.createElement("div");
-        this.wins_cell.classList.add("cell");
-        this.div.append(this.wins_cell);
+        cell = this.create_div("", "cell");
+        this.wins_cell = this.create_div("");
+        cell.append(this.wins_cell);
+        this.div.append(cell);
 
-        this.loose_cell = document.createElement("div");
-        this.loose_cell.classList.add("cell");
-        this.div.append(this.loose_cell);
+        cell = this.create_div("", "cell");
+        this.loose_cell = this.create_div("");
+        cell.append(this.loose_cell);
+        this.div.append(cell);
 
-        this.winrate_cell = document.createElement("div");
-        this.winrate_cell.classList.add("wr");
-        this.div.append(this.winrate_cell);
+        cell = this.create_div("", "wr");
+        this.winrate_cell = this.create_div("");
+        cell.append(this.winrate_cell);
+        this.div.append(cell);
     }
 
     calculation() {
         this.games = this.player.games.filter(
-            elem => elem.start_time >= this.month.start && elem.start_time < this.month.end
+            elem => elem.start_time >= this.table.start && elem.start_time < this.table.end
         );
+
+        this.wins_cell.innerHTML = "";
+        this.loose_cell.innerHTML = "";
+        this.winrate_cell.innerHTML = "";
+
+        this.wins_cell.classList.remove("win", "loose");
+        this.loose_cell.classList.remove("win", "loose");
+        this.winrate_cell.classList.remove("win", "loose");
 
         this.month_wins = 0;
         this.month_looses = 0;
@@ -277,48 +283,50 @@ class Row {
         }
 
         if (this.month_wins > 0) {
-            let win = document.createElement("div");
-            win.classList.add("win");
-            win.innerHTML = this.month_wins;
-            this.wins_cell.append(win);
+            this.wins_cell.classList.add("win");
+            this.wins_cell.innerHTML = this.month_wins;
         }
 
         if (this.month_looses > 0) {
-            let loose = document.createElement("div");
-            loose.classList.add("loose");
-            loose.innerHTML = this.month_looses;
-            this.loose_cell.append(loose);
+            this.loose_cell.classList.add("loose");
+            this.loose_cell.innerHTML = this.month_looses;
         }
 
         if (this.month_looses + this.month_wins > 0) {
             let winrate = (this.month_wins / (this.month_looses + this.month_wins)).toFixed(2);
-
+            this.winrate_cell.innerHTML = winrate;
             if (winrate >= 0.5) {
-                let win = document.createElement("div");
-                win.classList.add("win");
-                win.innerHTML = winrate;
-                this.winrate_cell.append(win);
+                this.winrate_cell.classList.add("win");
             } else {
-                let loose = document.createElement("div");
-                loose.classList.add("loose");
-                loose.innerHTML = winrate;
-                this.winrate_cell.append(loose);
+                this.winrate_cell.classList.add("loose");
             }
         }
     }
 }
 
-class Cell {
+class Cell extends Div {
     constructor(row, day) {
+        super("cell");
         this.row = row;
-        this.start = row.month.start + 24 * 3600 * (day - 1);
-        this.end = row.month.start + 24 * 3600 * day;
-        this.div = document.createElement("div");
-        this.div.classList.add("cell");
-        this.row.div.append(this.div);
+        this.table = row.table;
+        this.day = day;
+        this.win_div = this.create_div("", "win");
+        this.loose_div = this.create_div("", "loose");
+        this.div.append(this.win_div);
+        this.div.append(this.loose_div);
     }
 
     calculation() {
+        if (this.day > 27) {
+            this.div.classList.remove("not-display");
+        }
+        if (this.day > this.table.days) {
+            this.div.classList.add("not-display");
+        }
+
+        this.start = this.table.start + (this.day - 1) * 3600 * 24;
+        this.end = this.start + 3600 * 24;
+
         this.games = this.row.games.filter(
             elem => elem.start_time >= this.start && elem.start_time < this.end
         );
@@ -326,18 +334,15 @@ class Cell {
         this.wins = this.games.filter(game => this.win_loose(game)).length;
         this.looses = this.games.filter(game => !this.win_loose(game)).length;
 
+        this.win_div.innerHTML = "";
+        this.loose_div.innerHTML = "";
+
         if (this.wins > 0) {
-            let win = document.createElement("div");
-            win.classList.add("win");
-            win.innerHTML = this.wins;
-            this.div.append(win);
+            this.win_div.innerHTML = this.wins;
         }
 
         if (this.looses > 0) {
-            let loose = document.createElement("div");
-            loose.classList.add("loose");
-            loose.innerHTML = this.looses;
-            this.div.append(loose);
+            this.loose_div.innerHTML = this.looses;
         }
     }
 

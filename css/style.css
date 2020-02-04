@@ -1,6 +1,5 @@
 body {
     background: linear-gradient(45grad, #2b8ef4, #c5dde8);
-
     font-family: Arial, Helvetica, sans-serif;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -21,7 +20,7 @@ body {
     flex-direction: column;
 }
 
-.board {
+.table {
     position: relative;
     flex-direction: column;
 }
@@ -54,7 +53,7 @@ body {
     margin: auto;
 }
 
-.player_name_container {
+.player-name-container {
     margin-top: 5px;
 }
 
@@ -78,32 +77,37 @@ body {
     margin: auto;
 }
 
-.selector-container {
+.date-selector {
+    display: flex;
+    font-size: 25px;
+}
+
+.date-box {
     position: relative;
     width: 200px;
 }
 
-.selector-container:active .selector {
+.date-box:active .date-list {
     display: flex;
 }
 
-.selector:hover {
+.date-list:hover {
     display: flex;
     cursor: pointer;
 }
 
-.month-year {
+.current-date {
     display: flex;
     width: 180px;
     justify-content: space-between;
-    font-size: 25px;
+
     cursor: pointer;
     color: azure;
     flex-grow: initial;
     margin: 5px;
 }
 
-.selector {
+.date-list {
     display: none;
     width: 200px;
     top: 0;
@@ -113,36 +117,40 @@ body {
     padding: 5px;
 }
 
-.year-selector {
+.year-list {
     width: 40%;
     /* border-right: #e6e5ed 3px solid; */
     font-size: 25px;
 }
 
-.month-selector {
+.month-list {
     width: 60%;
     font-size: 20px;
 }
 
-.selectable-year {
+.year-list div {
     /* border-bottom: #e6e5ed 1px solid; */
     text-align: center;
 }
 
-.selectable-month {
+.month-list div {
     /* border-bottom: #e6e5ed 1px solid; */
     text-align: center;
     height: 22px;
 }
 
-.selectable-year:hover {
+.year-list div :hover {
     color: azure;
 }
 
-.selectable-month:hover {
+.month-list div:hover {
     color: azure;
 }
 
 .selected {
     color: azure;
+}
+
+.not-display {
+    display: none;
 }

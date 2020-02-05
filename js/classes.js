@@ -14,7 +14,7 @@ class Main {
         this.now_day = this.now.getDate();
 
         this.table = new Table(this);
-        // this.date_seector = new DateSelector(this);
+        this.date_selector = new DateSelector(this.table);
     }
 
     async load_data() {
@@ -61,83 +61,125 @@ class Player {
 }
 
 class DateSelector {
-    constructor(main) {
-        this.main = main;
+    constructor(table) {
+        this.main = table.main;
         this.table = table;
 
-        this.current_year = main.now_year;
-        this.current_month = main.now_month;
+        this.year = table.year;
+        this.month = table.month;
 
-        this.selector_div = document.querySelector(".selector");
-        this.year_selector = document.querySelector(".year-selector");
-        this.month_selector = document.querySelector(".month-selector");
+        let date_selector = document.querySelector(".date-selector");
 
-        this.selected_year = document.querySelector(".select-year");
-        this.selected_month = document.querySelector(".select-month");
+        let previous_month = date_selector.children[0];
+        previous_month.addEventListener("click", e => this.previous_month(e));
 
-        this.selector_div.addEventListener("mouseleave", () => this.calculation_selected_month());
+        let date_box = date_selector.children[1];
 
-        for (let month_selector_div of this.month_selector.children) {
-            month_selector_div.addEventListener("click", e => this.month_select(e));
+        let next_month = date_selector.children[2];
+        next_month.addEventListener("click", e => this.next_month(e));
+
+        let current_date = date_box.children[0];
+        let date_list = date_box.children[1];
+        date_list.addEventListener("mouseleave", () => this.calculation());
+
+        this.year_div = current_date.children[0];
+        this.month_div = current_date.children[1];
+
+        this.year_div.innerHTML = this.year;
+        this.month_div.innerHTML = this.month_name(this.month);
+
+        this.year_list = date_list.children[0];
+        this.month_list = date_list.children[1];
+
+        for (let month of this.month_list.children) {
+            month.addEventListener("click", e => this.month_select(e));
+            if (month.id == this.month) {
+                month.classList.add("selected");
+                this.selected_month = month;
+            }
         }
 
-        this.board = document.querySelector(".board");
-        this.tables = {};
-
-        for (let year = this.current_year; year >= 2012; year--) {
+        for (let year = this.year; year >= 2012; year--) {
             let year_number = document.createElement("div");
-            year_number.classList.add("selectable-year");
             year_number.innerHTML = year;
             year_number.addEventListener("click", e => this.year_select(e));
-            this.year_selector.append(year_number);
-
-            let month_in_year = [];
-            for (let month = 0; month <= 11; month++) {
-                month_in_year.push(new MonthTable(this, year, month));
+            if (year == this.year) {
+                year_number.classList.add("selected");
+                this.selected_year = year_number;
             }
-            this.tables[year] = month_in_year;
+            this.year_list.append(year_number);
         }
-        this.substitute_current_date();
     }
 
-    substitute_current_date() {
-        this.selected_year.innerHTML = this.current_year;
-        this.year_selector.children[this.now_year - this.current_year].classList.add("selected");
-
-        this.selected_month.innerHTML = new Date(
-            this.current_year,
-            this.current_month
-        ).toLocaleString("ru", {
-            month: "long"
-        });
-        this.month_selector.children[this.current_month].classList.add("selected");
-        this.current_month_obj = this.tables[this.current_year][this.current_month];
-
-        this.board.append(this.current_month_obj.div);
+    previous_month() {
+        let date = new Date(this.year, this.month - 1);
+        if (date.getFullYear() < 2012) return;
+        this.year = date.getFullYear();
+        this.month = date.getMonth();
+        this.change_date_in_list();
+        this.calculation();
     }
 
-    calculation_selected_month() {
-        this.board.children[0].remove();
-        this.substitute_current_date();
-        this.current_month_obj.calculation();
+    next_month() {
+        let date = new Date(this.year, this.month + 1);
+        if (date.getFullYear() > this.table.main.now_year) return;
+        this.year = date.getFullYear();
+        this.month = date.getMonth();
+        this.change_date_in_list();
+        this.calculation();
+    }
+
+    change_date_in_list() {
+        this.selected_month.classList.remove("selected");
+        this.selected_month = this.month_list.children[this.month];
+        this.selected_month.classList.add("selected");
+        this.selected_year.classList.remove("selected");
+        this.selected_year = this.year_list.children[
+            this.year_list.children.length - (this.year - 2012 + 1)
+        ];
+        this.selected_year.classList.add("selected");
+    }
+
+    calculation() {
+        this.year_div.innerHTML = this.year;
+        this.month_div.innerHTML = this.month_name(this.month);
+        this.table.year = this.year;
+        this.table.month = this.month;
+        this.table.calculation();
     }
 
     month_select(e) {
         let selected_month = e.target;
-        for (let month of this.month_selector.children) {
-            month.classList.remove("selected");
-        }
+        this.selected_month.classList.remove("selected");
+        this.selected_month = selected_month;
         selected_month.classList.add("selected");
-        this.current_month = selected_month.id;
+        this.month = selected_month.id;
     }
 
     year_select(e) {
         let selected_year = e.target;
-        for (let year of this.year_selector.children) {
-            year.classList.remove("selected");
-        }
+        this.selected_year.classList.remove("selected");
+        this.selected_year = selected_year;
         selected_year.classList.add("selected");
-        this.current_year = selected_year.innerHTML;
+        this.year = selected_year.innerHTML;
+    }
+
+    month_name(id) {
+        const months = [
+            "Январь",
+            "Февраль",
+            "Март",
+            "Апрель",
+            "Май",
+            "Июнь",
+            "Июль",
+            "Август",
+            "Сентябрь",
+            "Октябрь",
+            "Ноябрь",
+            "Декабрь"
+        ];
+        return months[id];
     }
 }
 
@@ -148,6 +190,7 @@ class Table {
 
         this.year = main.now_year;
         this.month = main.now_month;
+        this.days = new Date(this.year, this.month + 1, 0).getDate();
 
         this.rows = [];
 
@@ -214,6 +257,8 @@ class HeadRow extends Div {
         cell = this.create_div("", "wr");
         cell.append(this.create_div("W/(W+L)", "margin-auto"));
         this.div.append(cell);
+
+        this.calculation();
     }
 
     calculation() {
@@ -235,7 +280,7 @@ class Row extends Div {
         this.days = [];
 
         let cell = this.create_div("", "player-name");
-        cell.append(this.create_div(this.player.name, "player_name_container"));
+        cell.append(this.create_div(this.player.name, "player-name-container"));
         this.div.append(cell);
 
         for (let day = 1; day <= 31; day++) {
@@ -314,15 +359,20 @@ class Cell extends Div {
         this.loose_div = this.create_div("", "loose");
         this.div.append(this.win_div);
         this.div.append(this.loose_div);
+        this.not_display();
     }
 
-    calculation() {
+    not_display() {
         if (this.day > 27) {
             this.div.classList.remove("not-display");
         }
         if (this.day > this.table.days) {
             this.div.classList.add("not-display");
         }
+    }
+
+    calculation() {
+        this.not_display();
 
         this.start = this.table.start + (this.day - 1) * 3600 * 24;
         this.end = this.start + 3600 * 24;

@@ -80,11 +80,27 @@ body {
 .date-selector {
     display: flex;
     font-size: 25px;
+    align-items: center;
 }
 
 .date-box {
     position: relative;
     width: 200px;
+    margin-left: 5px;
+    margin-right: 5px;
+}
+
+.previous-month,
+.next-month {
+    cursor: pointer;
+    color: azure;
+    border: 2px solid transparent;
+    border-radius: 8px;
+}
+
+.previous-month:hover,
+.next-month:hover {
+    border: 2px azure solid;
 }
 
 .date-box:active .date-list {
@@ -129,17 +145,17 @@ body {
 }
 
 .year-list div {
-    /* border-bottom: #e6e5ed 1px solid; */
-    text-align: center;
+    border-bottom: #e6e5ed 1px solid;
+    /* text-align: center; */
 }
 
 .month-list div {
     /* border-bottom: #e6e5ed 1px solid; */
-    text-align: center;
+    /* text-align: center; */
     height: 22px;
 }
 
-.year-list div :hover {
+.year-list div:hover {
     color: azure;
 }
 

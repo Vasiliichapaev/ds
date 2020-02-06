@@ -60,133 +60,6 @@ class Player {
     }
 }
 
-class DateSelector {
-    constructor(table) {
-        this.main = table.main;
-        this.table = table;
-
-        this.year = table.year;
-        this.month = table.month;
-
-        let date_selector = document.querySelector(".date-selector");
-
-        let previous_month = date_selector.children[0];
-        let date_box = date_selector.children[1];
-        let next_month = date_selector.children[2];
-
-        previous_month.addEventListener("click", () => this.previous_month());
-        next_month.addEventListener("click", () => this.next_month());
-
-        document.addEventListener("keydown", e => {
-            if (e.key === "ArrowLeft") this.previous_month();
-            if (e.key === "ArrowRight") this.next_month();
-        });
-
-        let current_date = date_box.children[0];
-        let date_list = date_box.children[1];
-        date_list.addEventListener("mouseleave", () => this.calculation());
-
-        this.year_div = current_date.children[0];
-        this.month_div = current_date.children[1];
-
-        this.year_div.innerHTML = this.year;
-        this.month_div.innerHTML = this.month_name(this.month);
-
-        this.year_list = date_list.children[0];
-        this.month_list = date_list.children[1];
-
-        for (let month of this.month_list.children) {
-            month.addEventListener("click", e => this.month_select(e));
-            if (month.id == this.month) {
-                month.classList.add("selected");
-                this.selected_month = month;
-            }
-        }
-
-        for (let year = this.year; year >= 2012; year--) {
-            let year_number = document.createElement("div");
-            year_number.innerHTML = year;
-            year_number.addEventListener("click", e => this.year_select(e));
-            if (year == this.year) {
-                year_number.classList.add("selected");
-                this.selected_year = year_number;
-            }
-            this.year_list.append(year_number);
-        }
-    }
-
-    previous_month() {
-        let date = new Date(this.year, this.month - 1);
-        if (date.getFullYear() < 2012) return;
-        this.year = date.getFullYear();
-        this.month = date.getMonth();
-        this.change_date_in_list();
-        this.calculation();
-    }
-
-    next_month() {
-        let date = new Date(this.year, this.month + 1);
-        if (date.getFullYear() > this.table.main.now_year) return;
-        this.year = date.getFullYear();
-        this.month = date.getMonth();
-        this.change_date_in_list();
-        this.calculation();
-    }
-
-    change_date_in_list() {
-        this.selected_month.classList.remove("selected");
-        this.selected_month = this.month_list.children[this.month];
-        this.selected_month.classList.add("selected");
-        this.selected_year.classList.remove("selected");
-        this.selected_year = this.year_list.children[
-            this.year_list.children.length - (this.year - 2012 + 1)
-        ];
-        this.selected_year.classList.add("selected");
-    }
-
-    calculation() {
-        this.year_div.innerHTML = this.year;
-        this.month_div.innerHTML = this.month_name(this.month);
-        this.table.year = this.year;
-        this.table.month = this.month;
-        this.table.calculation();
-    }
-
-    month_select(e) {
-        let selected_month = e.target;
-        this.selected_month.classList.remove("selected");
-        this.selected_month = selected_month;
-        selected_month.classList.add("selected");
-        this.month = selected_month.id;
-    }
-
-    year_select(e) {
-        let selected_year = e.target;
-        this.selected_year.classList.remove("selected");
-        this.selected_year = selected_year;
-        selected_year.classList.add("selected");
-        this.year = selected_year.innerHTML;
-    }
-
-    month_name(id) {
-        const months = [
-            "Январь",
-            "Февраль",
-            "Март",
-            "Апрель",
-            "Май",
-            "Июнь",
-            "Июль",
-            "Август",
-            "Сентябрь",
-            "Октябрь",
-            "Ноябрь",
-            "Декабрь"
-        ];
-        return months[id];
-    }
-}
-
 class Table {
     constructor(main) {
         this.main = main;
@@ -412,4 +285,131 @@ class Cell extends Div {
     //     if (game.lobby_type == 7) return true;
     //     return false;
     // }
+}
+
+class DateSelector {
+    constructor(table) {
+        this.main = table.main;
+        this.table = table;
+
+        this.year = table.year;
+        this.month = table.month;
+
+        let date_selector = document.querySelector(".date-selector");
+
+        let previous_month = date_selector.children[0];
+        let date_box = date_selector.children[1];
+        let next_month = date_selector.children[2];
+
+        previous_month.addEventListener("click", () => this.previous_month());
+        next_month.addEventListener("click", () => this.next_month());
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowLeft") this.previous_month();
+            if (e.key === "ArrowRight") this.next_month();
+        });
+
+        let current_date = date_box.children[0];
+        let date_list = date_box.children[1];
+        date_list.addEventListener("mouseleave", () => this.calculation());
+
+        this.year_div = current_date.children[0];
+        this.month_div = current_date.children[1];
+
+        this.year_div.innerHTML = this.year;
+        this.month_div.innerHTML = this.month_name(this.month);
+
+        this.year_list = date_list.children[0];
+        this.month_list = date_list.children[1];
+
+        for (let month of this.month_list.children) {
+            month.addEventListener("click", e => this.month_select(e));
+            if (month.id == this.month) {
+                month.classList.add("selected");
+                this.selected_month = month;
+            }
+        }
+
+        for (let year = this.year; year >= 2012; year--) {
+            let year_number = document.createElement("div");
+            year_number.innerHTML = year;
+            year_number.addEventListener("click", e => this.year_select(e));
+            if (year == this.year) {
+                year_number.classList.add("selected");
+                this.selected_year = year_number;
+            }
+            this.year_list.append(year_number);
+        }
+    }
+
+    previous_month() {
+        let date = new Date(this.year, this.month - 1);
+        if (date.getFullYear() < 2012) return;
+        this.year = date.getFullYear();
+        this.month = date.getMonth();
+        this.change_date_in_list();
+        this.calculation();
+    }
+
+    next_month() {
+        let date = new Date(this.year, this.month + 1);
+        if (date.getFullYear() > this.table.main.now_year) return;
+        this.year = date.getFullYear();
+        this.month = date.getMonth();
+        this.change_date_in_list();
+        this.calculation();
+    }
+
+    change_date_in_list() {
+        this.selected_month.classList.remove("selected");
+        this.selected_month = this.month_list.children[this.month];
+        this.selected_month.classList.add("selected");
+        this.selected_year.classList.remove("selected");
+        this.selected_year = this.year_list.children[
+            this.year_list.children.length - (this.year - 2012 + 1)
+        ];
+        this.selected_year.classList.add("selected");
+    }
+
+    calculation() {
+        this.year_div.innerHTML = this.year;
+        this.month_div.innerHTML = this.month_name(this.month);
+        this.table.year = this.year;
+        this.table.month = this.month;
+        this.table.calculation();
+    }
+
+    month_select(e) {
+        let selected_month = e.target;
+        this.selected_month.classList.remove("selected");
+        this.selected_month = selected_month;
+        selected_month.classList.add("selected");
+        this.month = selected_month.id;
+    }
+
+    year_select(e) {
+        let selected_year = e.target;
+        this.selected_year.classList.remove("selected");
+        this.selected_year = selected_year;
+        selected_year.classList.add("selected");
+        this.year = selected_year.innerHTML;
+    }
+
+    month_name(id) {
+        const months = [
+            "Январь",
+            "Февраль",
+            "Март",
+            "Апрель",
+            "Май",
+            "Июнь",
+            "Июль",
+            "Август",
+            "Сентябрь",
+            "Октябрь",
+            "Ноябрь",
+            "Декабрь"
+        ];
+        return months[id];
+    }
 }

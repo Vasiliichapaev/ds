@@ -85,9 +85,14 @@ body {
 
 .date-box {
     position: relative;
-    width: 200px;
-    margin-left: 5px;
-    margin-right: 5px;
+    width: 190px;
+    margin: 3px;
+    border: 2px solid azure;
+    border-radius: 15px;
+}
+
+.date-box:hover {
+    border: 2px azure solid;
 }
 
 .previous-month,
@@ -103,56 +108,63 @@ body {
     border: 2px azure solid;
 }
 
+.previous-month:active,
+.next-month:active {
+    background-color: cornflowerblue;
+}
+
 .date-box:active .date-list {
     display: flex;
 }
 
-.date-list:hover {
-    display: flex;
-    cursor: pointer;
-}
-
 .current-date {
     display: flex;
-    width: 180px;
     justify-content: space-between;
-
     cursor: pointer;
     color: azure;
     flex-grow: initial;
     margin: 5px;
 }
 
+.current-month {
+    font-size: 22px;
+}
+
 .date-list {
     display: none;
-    width: 200px;
-    top: 0;
+    width: 180px;
+    height: 303px;
+    top: -2px;
+    left: -2px;
     position: absolute;
-    background-color: #2b8ef4;
+    background-color: #65b1ef;
     z-index: 1;
     padding: 5px;
+    border: 2px azure solid;
+    border-radius: 15px;
+    justify-content: space-between;
+}
+
+.date-list:hover {
+    display: flex;
 }
 
 .year-list {
-    width: 40%;
-    /* border-right: #e6e5ed 3px solid; */
-    font-size: 25px;
+    overflow: hidden;
 }
 
 .month-list {
-    width: 60%;
-    font-size: 20px;
+    font-size: 22px;
 }
 
 .year-list div {
-    border-bottom: #e6e5ed 1px solid;
-    /* text-align: center; */
+    cursor: pointer;
 }
 
 .month-list div {
-    /* border-bottom: #e6e5ed 1px solid; */
-    /* text-align: center; */
-    height: 22px;
+    cursor: pointer;
+    text-align: right;
+    height: 25px;
 }
 
 .year-list div:hover {

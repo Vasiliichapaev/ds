@@ -71,12 +71,16 @@ class DateSelector {
         let date_selector = document.querySelector(".date-selector");
 
         let previous_month = date_selector.children[0];
-        previous_month.addEventListener("click", e => this.previous_month(e));
-
         let date_box = date_selector.children[1];
-
         let next_month = date_selector.children[2];
-        next_month.addEventListener("click", e => this.next_month(e));
+
+        previous_month.addEventListener("click", () => this.previous_month());
+        next_month.addEventListener("click", () => this.next_month());
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowLeft") this.previous_month();
+            if (e.key === "ArrowRight") this.next_month();
+        });
 
         let current_date = date_box.children[0];
         let date_list = date_box.children[1];
@@ -357,8 +361,7 @@ class Cell extends Div {
         this.day = day;
         this.win_div = this.create_div("", "win");
         this.loose_div = this.create_div("", "loose");
-        this.div.append(this.win_div);
-        this.div.append(this.loose_div);
+        this.div.append(this.win_div, this.loose_div);
         this.not_display();
     }
 
@@ -381,8 +384,11 @@ class Cell extends Div {
             elem => elem.start_time >= this.start && elem.start_time < this.end
         );
 
-        this.wins = this.games.filter(game => this.win_loose(game)).length;
-        this.looses = this.games.filter(game => !this.win_loose(game)).length;
+        this.win_games = this.games.filter(game => this.win_loose(game));
+        this.loose_games = this.games.filter(game => !this.win_loose(game));
+
+        this.wins = this.win_games.length;
+        this.looses = this.loose_games.length;
 
         this.win_div.innerHTML = "";
         this.loose_div.innerHTML = "";
@@ -402,8 +408,8 @@ class Cell extends Div {
         return false;
     }
 
-    ranked(game) {
-        if (game.lobby_type == 7) return true;
-        return false;
-    }
+    // ranked(game) {
+    //     if (game.lobby_type == 7) return true;
+    //     return false;
+    // }
 }

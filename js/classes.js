@@ -1,9 +1,8 @@
 class Main {
-    constructor(players_dict) {
+    constructor(players_data) {
         this.players = [];
-        for (let player_name in players_dict) {
-            let player = new Player(player_name, players_dict[player_name]);
-            this.players.push(player);
+        for (let player_data of players_data) {
+            this.players.push(new Player(player_data));
         }
 
         this.heroes = [];
@@ -40,16 +39,25 @@ class Main {
 }
 
 class Player {
-    constructor(name, id_list) {
-        this.name = name;
-        this.id_list = id_list;
+    constructor(player_data) {
+        this.name = player_data.name;
+        this.accounts = player_data.accounts;
         this.games = [];
     }
 
     load_games() {
         let promise_list = [];
-        for (let id of this.id_list) {
-            let response = fetch(`https://api.opendota.com/api/players/${id}/matches`)
+        for (let account of this.accounts) {
+            let response_string = `https://api.opendota.com/api/players/${account.id}/matches`;
+            if (account.start_date) {
+                let year = account.start_date[2];
+                let month = account.start_date[1] - 1;
+                let day = account.start_date[0];
+                let days_to_start = (new Date() - new Date(year, month, day)) / (1000 * 3600 * 24);
+                response_string += `?date=${days_to_start.toFixed()}`;
+            }
+
+            let response = fetch(response_string)
                 .then(response => response.json())
                 .then(result => {
                     this.games = this.games.concat(result);
@@ -145,6 +153,17 @@ class HeadRow extends Div {
 
         for (let day = 31; day > this.table.days; day--) {
             this.days[day - 1].classList.add("not-display");
+        }
+
+        for (let day = 0; day < this.days.length; day++) {
+            this.days[day].classList.remove("current-day");
+            if (
+                this.table.year == this.table.main.now_year &&
+                this.table.month == this.table.main.now_month &&
+                day + 1 == this.table.main.now_day
+            ) {
+                this.days[day].classList.add("current-day");
+            }
         }
     }
 }
@@ -280,26 +299,20 @@ class Cell extends Div {
         if (!game.radiant_win && game.player_slot > 6) return true;
         return false;
     }
-
-    // ranked(game) {
-    //     if (game.lobby_type == 7) return true;
-    //     return false;
-    // }
 }
 
 class DateSelector {
     constructor(table) {
         this.main = table.main;
         this.table = table;
-
         this.year = table.year;
         this.month = table.month;
 
-        let date_selector = document.querySelector(".date-selector");
+        this.div = document.querySelector(".date-selector");
 
-        let previous_month = date_selector.children[0];
-        let date_box = date_selector.children[1];
-        let next_month = date_selector.children[2];
+        let previous_month = this.div.children[0];
+        let date_box = this.div.children[1];
+        let next_month = this.div.children[2];
 
         previous_month.addEventListener("click", () => this.previous_month());
         next_month.addEventListener("click", () => this.next_month());
@@ -353,7 +366,7 @@ class DateSelector {
 
     next_month() {
         let date = new Date(this.year, this.month + 1);
-        if (date.getFullYear() > this.table.main.now_year) return;
+        if (date.getFullYear() > this.main.now_year) return;
         this.year = date.getFullYear();
         this.month = date.getMonth();
         this.change_date_in_list();
@@ -372,6 +385,7 @@ class DateSelector {
     }
 
     calculation() {
+        if (this.year == this.table.year && this.month == this.table.month) return;
         this.year_div.innerHTML = this.year;
         this.month_div.innerHTML = this.month_name(this.month);
         this.table.year = this.year;

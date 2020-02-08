@@ -88,7 +88,7 @@ body {
     width: 190px;
     margin: 3px;
     border: 2px solid azure;
-    border-radius: 15px;
+    border-radius: 20px;
 }
 
 .date-box:hover {
@@ -141,7 +141,7 @@ body {
     z-index: 1;
     padding: 5px;
     border: 2px azure solid;
-    border-radius: 15px;
+    border-radius: 20px;
     justify-content: space-between;
 }
 
@@ -181,4 +181,8 @@ body {
 
 .not-display {
     display: none;
+}
+
+.current-day {
+    background-color: mediumaquamarine;
 }

@@ -1,14 +1,62 @@
-const players_dict = {
-    VChapaev: [117990545, 254920273],
-    Neeeeeerf: [102756891],
-    JohnGalt: [41528404],
-    Megabit: [84502939],
-    Alexfov: [313885294],
-    Alexfov2: [153901833],
-    BloOdTerrOr: [120491980]
-};
+const players_data = [
+    {
+        name: "VChapaev",
+        accounts: [
+            {
+                id: 117990545
+            },
+            {
+                id: 254920273
+            }
+        ]
+    },
+    {
+        name: "Neeeeeerf",
+        accounts: [
+            {
+                id: 102756891
+            }
+        ]
+    },
+    {
+        name: "JohnGalt",
+        accounts: [
+            {
+                id: 41528404
+            }
+        ]
+    },
+    {
+        name: "Megabit",
+        accounts: [
+            {
+                id: 84502939
+            }
+        ]
+    },
+    {
+        name: "Alexfov",
+        accounts: [
+            {
+                id: 313885294
+            },
+            {
+                id: 153901833,
+                start_date: [14, 12, 2019]
+            }
+        ]
+    },
+    {
+        name: "BloOdTerrOr",
+        accounts: [
+            {
+                id: 120491980
+            }
+        ]
+    }
+];
 
-let main = new Main(players_dict);
+let main = new Main(players_data);
 
 main.load_data().then(a => {
     main.calculation();

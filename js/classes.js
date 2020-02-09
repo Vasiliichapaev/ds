@@ -329,7 +329,7 @@ class PopUp extends Div {
     create() {
         this.heroes = this.cell.table.main.heroes;
 
-        this.cell.div.classList.remove("pointer");
+        this.cell.div.classList.remove("select-cell");
         if (this.cell.div.children[2]) this.cell.div.children[2].remove();
 
         for (let row = this.pop_up_body.children.length - 1; row >= 0; row--) {
@@ -365,7 +365,7 @@ class PopUp extends Div {
             this.pop_up_body.append(pop_up_row);
         }
 
-        this.cell.div.classList.add("pointer");
+        this.cell.div.classList.add("select-cell");
         this.cell.div.append(this.div);
     }
 }
@@ -391,7 +391,7 @@ class MonthPopUp extends Div {
     create() {
         this.heroes = this.row.table.main.heroes;
 
-        this.cell.classList.remove("pointer");
+        this.cell.classList.remove("select-cell");
         if (this.cell.children[1]) this.cell.children[1].remove();
 
         for (let row = this.pop_up_body.children.length - 1; row >= 0; row--) {
@@ -447,7 +447,7 @@ class MonthPopUp extends Div {
             this.pop_up_body.append(pop_up_row);
         }
 
-        this.cell.classList.add("pointer");
+        this.cell.classList.add("select-cell");
         this.cell.append(this.div);
     }
 }

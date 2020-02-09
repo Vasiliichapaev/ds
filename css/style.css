@@ -225,6 +225,14 @@ body {
     cursor: pointer;
 }
 
+.select-cell {
+    cursor: pointer;
+}
+
+.select-cell:hover {
+    background-color: #dcc9a5;
+}
+
 .pop-up {
     position: absolute;
     display: none;

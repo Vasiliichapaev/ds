@@ -22,7 +22,10 @@ class Main {
         let heroes = fetch(`https://api.opendota.com/api/heroStats`)
             .then(response => response.json())
             .then(result => {
-                this.heroes = result;
+                this.heroes = {};
+                for (let hero of result) {
+                    this.heroes[hero.id] = hero;
+                }
             });
         promise_list.push(heroes);
 
@@ -253,6 +256,7 @@ class Cell extends Div {
         this.day = day;
         this.win_div = this.create_div("", "win");
         this.loose_div = this.create_div("", "loose");
+        this.pop_up = new PopUp(this);
         this.div.append(this.win_div, this.loose_div);
         this.not_display();
     }
@@ -276,6 +280,8 @@ class Cell extends Div {
             elem => elem.start_time >= this.start && elem.start_time < this.end
         );
 
+        this.games.sort((a, b) => b.start_time - a.start_time);
+
         this.win_games = this.games.filter(game => this.win_loose(game));
         this.loose_games = this.games.filter(game => !this.win_loose(game));
 
@@ -292,12 +298,73 @@ class Cell extends Div {
         if (this.looses > 0) {
             this.loose_div.innerHTML = this.looses;
         }
+        this.pop_up.create();
     }
 
     win_loose(game) {
         if (game.radiant_win && game.player_slot < 6) return true;
         if (!game.radiant_win && game.player_slot > 6) return true;
         return false;
+    }
+}
+
+class PopUp extends Div {
+    constructor(cell) {
+        super("pop-up");
+        this.cell = cell;
+
+        let pop_up_head = this.create_div("", "pop-up-head");
+        pop_up_head.append(this.create_div("", "pop-up-hero"));
+        pop_up_head.append(this.create_div("У", "pop-up-cell"));
+        pop_up_head.append(this.create_div("С", "pop-up-cell"));
+        pop_up_head.append(this.create_div("П", "pop-up-cell"));
+
+        this.pop_up_body = this.create_div("", "pop-up-body");
+        this.div.append(pop_up_head);
+        this.div.append(this.pop_up_body);
+    }
+
+    create() {
+        this.heroes = this.cell.table.main.heroes;
+
+        this.cell.div.classList.remove("pointer");
+        if (this.cell.div.children[2]) this.cell.div.children[2].remove();
+
+        for (let row = this.pop_up_body.children.length - 1; row >= 0; row--) {
+            this.pop_up_body.children[row].remove();
+        }
+
+        if (this.cell.games.length == 0) return;
+
+        for (let game of this.cell.games) {
+            let img_url = this.heroes[game.hero_id].img;
+            let pop_up_row = this.create_div("", "pop-up-row");
+
+            let game_link = document.createElement("a");
+            game_link.href = `https://www.opendota.com/matches/${game.match_id}`;
+            pop_up_row.append(game_link);
+
+            if (this.cell.win_loose(game)) {
+                pop_up_row.classList.add("green");
+            } else {
+                pop_up_row.classList.add("red");
+            }
+
+            let pop_up_hero = this.create_div("", "pop-up-hero");
+            let pop_up_hero_img = document.createElement("img");
+            pop_up_hero_img.src = `https://api.opendota.com${img_url}`;
+            pop_up_hero.append(pop_up_hero_img);
+            pop_up_row.append(pop_up_hero);
+            this.div.append(pop_up_row);
+
+            pop_up_row.append(this.create_div(game.kills, "pop-up-cell"));
+            pop_up_row.append(this.create_div(game.deaths, "pop-up-cell"));
+            pop_up_row.append(this.create_div(game.assists, "pop-up-cell"));
+            this.pop_up_body.append(pop_up_row);
+        }
+
+        this.cell.div.classList.add("pointer");
+        this.cell.div.append(this.div);
     }
 }
 

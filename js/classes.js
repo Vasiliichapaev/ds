@@ -215,6 +215,8 @@ class Row extends Div {
             elem => elem.start_time >= this.table.start && elem.start_time < this.table.end
         );
 
+        this.games = this.games.filter(elem => elem.hero_id > 0);
+
         this.wins_cell.innerHTML = "";
         this.loose_cell.innerHTML = "";
         this.winrate_cell.innerHTML = "";

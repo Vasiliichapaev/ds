@@ -115,6 +115,12 @@ class Div {
         div.classList.add(...classes);
         return div;
     }
+
+    win_game(game) {
+        if (game.radiant_win && game.player_slot < 6) return true;
+        if (!game.radiant_win && game.player_slot > 6) return true;
+        return false;
+    }
 }
 
 class HeadRow extends Div {
@@ -142,7 +148,7 @@ class HeadRow extends Div {
         cell.append(this.create_div("L", "margin-auto"));
         this.div.append(cell);
 
-        cell = this.create_div("", "wr");
+        cell = this.create_div("", "winrate-cell");
         cell.append(this.create_div("W/(W+L)", "margin-auto"));
         this.div.append(cell);
 
@@ -198,7 +204,7 @@ class Row extends Div {
         cell.append(this.loose_cell);
         this.div.append(cell);
 
-        cell = this.create_div("", "wr");
+        cell = this.create_div("", "winrate-cell");
         this.winrate_cell = this.create_div("");
         cell.append(this.winrate_cell);
         this.div.append(cell);
@@ -245,6 +251,8 @@ class Row extends Div {
                 this.winrate_cell.classList.add("loose");
             }
         }
+        this.month_pop_up = new MonthPopUp(this);
+        this.month_pop_up.create();
     }
 }
 
@@ -282,8 +290,8 @@ class Cell extends Div {
 
         this.games.sort((a, b) => b.start_time - a.start_time);
 
-        this.win_games = this.games.filter(game => this.win_loose(game));
-        this.loose_games = this.games.filter(game => !this.win_loose(game));
+        this.win_games = this.games.filter(game => this.win_game(game));
+        this.loose_games = this.games.filter(game => !this.win_game(game));
 
         this.wins = this.win_games.length;
         this.looses = this.loose_games.length;
@@ -299,12 +307,6 @@ class Cell extends Div {
             this.loose_div.innerHTML = this.looses;
         }
         this.pop_up.create();
-    }
-
-    win_loose(game) {
-        if (game.radiant_win && game.player_slot < 6) return true;
-        if (!game.radiant_win && game.player_slot > 6) return true;
-        return false;
     }
 }
 
@@ -344,7 +346,7 @@ class PopUp extends Div {
             game_link.href = `https://www.opendota.com/matches/${game.match_id}`;
             pop_up_row.append(game_link);
 
-            if (this.cell.win_loose(game)) {
+            if (this.cell.win_game(game)) {
                 pop_up_row.classList.add("green");
             } else {
                 pop_up_row.classList.add("red");
@@ -365,6 +367,88 @@ class PopUp extends Div {
 
         this.cell.div.classList.add("pointer");
         this.cell.div.append(this.div);
+    }
+}
+
+class MonthPopUp extends Div {
+    constructor(row) {
+        super("month-pop-up");
+        this.row = row;
+        this.cell = row.div.children[34];
+        this.games = row.games;
+
+        let pop_up_head = this.create_div("", "pop-up-head");
+        pop_up_head.append(this.create_div("", "pop-up-hero"));
+        pop_up_head.append(this.create_div("W", "pop-up-cell", "green"));
+        pop_up_head.append(this.create_div("L", "pop-up-cell", "red"));
+        pop_up_head.append(this.create_div("W/(W+L)", "pop-up-winrate-cell"));
+
+        this.pop_up_body = this.create_div("", "pop-up-body");
+        this.div.append(pop_up_head);
+        this.div.append(this.pop_up_body);
+    }
+
+    create() {
+        this.heroes = this.row.table.main.heroes;
+
+        this.cell.classList.remove("pointer");
+        if (this.cell.children[1]) this.cell.children[1].remove();
+
+        for (let row = this.pop_up_body.children.length - 1; row >= 0; row--) {
+            this.pop_up_body.children[row].remove();
+        }
+
+        if (this.games.length == 0) return;
+
+        let month_heroes_id = new Set();
+        let hero_games = [];
+
+        for (let game of this.games) {
+            month_heroes_id.add(game.hero_id);
+        }
+
+        for (let id of month_heroes_id) {
+            let games = this.games.filter(game => game.hero_id == id);
+            let win_games_count = games.filter(game => this.win_game(game)).length;
+            let loose_games_count = games.filter(game => !this.win_game(game)).length;
+            hero_games.push([
+                id,
+                [win_games_count, loose_games_count, win_games_count + loose_games_count]
+            ]);
+        }
+
+        hero_games.sort((a, b) => b[1][2] - a[1][2]);
+
+        for (let hero of hero_games) {
+            let img_url = this.heroes[hero[0]].img;
+            let pop_up_row = this.create_div("", "month-pop-up-row");
+            let pop_up_hero = this.create_div("", "pop-up-hero");
+            let pop_up_hero_img = document.createElement("img");
+
+            pop_up_hero_img.src = `https://api.opendota.com${img_url}`;
+            pop_up_hero.append(pop_up_hero_img);
+            pop_up_row.append(pop_up_hero);
+            this.div.append(pop_up_row);
+
+            let winrate = hero[1][0] / hero[1][2];
+
+            pop_up_row.append(this.create_div(hero[1][0], "pop-up-cell", "green"));
+            pop_up_row.append(this.create_div(hero[1][1], "pop-up-cell", "red"));
+            if (winrate >= 0.5) {
+                pop_up_row.append(
+                    this.create_div(winrate.toFixed(2), "pop-up-winrate-cell", "green")
+                );
+            } else {
+                pop_up_row.append(
+                    this.create_div(winrate.toFixed(2), "pop-up-winrate-cell", "red")
+                );
+            }
+
+            this.pop_up_body.append(pop_up_row);
+        }
+
+        this.cell.classList.add("pointer");
+        this.cell.append(this.div);
     }
 }
 

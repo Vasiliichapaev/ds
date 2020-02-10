@@ -600,28 +600,45 @@ class Plot extends Div {
 
         this.ctx = this.canvas.getContext("2d");
 
-        let plot_body = this.create_div("", "plot-body");
+        this.plot_body = this.create_div("", "plot-body");
         this.plot_container = this.create_div("", "plot-container");
         this.plot_container.append(this.canvas);
 
-        plot_body.append(this.plot_container);
+        this.plot_body.append(this.plot_container);
 
         this.div.append(this.create_div(player.name, "plot-head"));
-        this.div.append(plot_body);
+        this.div.append(this.plot_body);
         plots_div.append(this.div);
     }
 
-    drawing() {
+    async drawing() {
         this.player.games.sort((a, b) => a.start_time - b.start_time);
-        let r = 2;
-        let delta = r * 1.2 * 2 ** 0.5;
-        this.canvas.width = this.player.games.length * delta + 20;
-        this.canvas.height = 1000;
-        this.plot_container.style.width = `${this.player.games.length * delta}px`;
-        this.plot_container.style.height = `1000px`;
+        const r = 2.5;
+        const delta = r * 1.2 * 2 ** 0.5;
+        const width = this.player.games.length * delta + 20;
+        let current_height = 0;
+        let max_height = 0;
+        let min_height = 0;
+        this.canvas.width = width;
+        this.plot_container.style.width = `${width}px`;
+
+        for (let game of this.player.games) {
+            if (game.hero_id == 0) continue;
+            if (this.win_game(game)) {
+                current_height++;
+            } else {
+                current_height--;
+            }
+            if (max_height < current_height) max_height = current_height;
+            if (min_height > current_height) min_height = current_height;
+        }
+
+        const height = Math.abs((max_height - min_height) * delta) + 10;
+        this.canvas.height = height;
+        this.plot_container.style.height = `${height}px`;
 
         let x = 0;
-        let y = 300;
+        let y = max_height * delta + 5;
 
         for (let game of this.player.games) {
             if (game.hero_id == 0) continue;
@@ -640,7 +657,7 @@ class Plot extends Div {
             this.ctx.fill();
         }
 
-        // this.canvas.width = x;
-        // this.canvas.height = y;
+        this.plot_body.scrollLeft += width;
+        this.plot_body.scrollTop += -current_height * delta;
     }
 }

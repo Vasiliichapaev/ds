@@ -303,17 +303,27 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    align-content: center;
-    justify-content: center;
 }
 
 .plot {
     margin-top: 30px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.plot-head {
+    font-size: 24px;
+    color: azure;
 }
 
 .plot-body {
     width: 1300px;
     overflow: scroll;
     background-color: #e6dbdb;
-    height: 283px;
+    height: 350px;
+}
+
+.footer {
+    height: 50px;
 }

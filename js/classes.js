@@ -560,7 +560,7 @@ class DateSelector {
         this.selected_month.classList.remove("selected");
         this.selected_month = selected_month;
         selected_month.classList.add("selected");
-        this.month = selected_month.id;
+        this.month = Number(selected_month.id);
     }
 
     year_select(e) {

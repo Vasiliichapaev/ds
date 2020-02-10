@@ -12,6 +12,7 @@ body {
 }
 
 .content {
+    margin-top: 50px;
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -296,4 +297,23 @@ body {
 
 .red {
     color: red;
+}
+
+.plots {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    align-content: center;
+    justify-content: center;
+}
+
+.plot {
+    margin-top: 30px;
+}
+
+.plot-body {
+    width: 1300px;
+    overflow: scroll;
+    background-color: #e6dbdb;
+    height: 283px;
 }

@@ -14,6 +14,12 @@ class Main {
 
         this.table = new Table(this);
         this.date_selector = new DateSelector(this.table);
+
+        this.plots_div = document.querySelector(".plots");
+        this.plots = [];
+        for (let player of this.players) {
+            this.plots.push(new Plot(this.plots_div, player));
+        }
     }
 
     async load_data() {
@@ -38,6 +44,10 @@ class Main {
 
     calculation() {
         this.table.calculation();
+
+        for (let plot of this.plots) {
+            plot.drawing();
+        }
     }
 }
 
@@ -81,14 +91,9 @@ class Table {
         this.days = new Date(this.year, this.month + 1, 0).getDate();
 
         this.rows = [];
-
-        let head_row = new HeadRow(this);
-        this.div.append(head_row.div);
-        this.rows.push(head_row);
-
+        this.rows.push(new HeadRow(this));
         for (let player of this.main.players) {
             let row = new Row(this, player);
-            this.div.append(row.div);
             this.rows.push(row);
         }
     }
@@ -152,6 +157,8 @@ class HeadRow extends Div {
         cell.append(this.create_div("W/(W+L)", "margin-auto"));
         this.div.append(cell);
 
+        this.table.div.append(this.div);
+
         this.calculation();
     }
 
@@ -190,7 +197,6 @@ class Row extends Div {
 
         for (let day = 1; day <= 31; day++) {
             cell = new Cell(this, day);
-            this.div.append(cell.div);
             this.days.push(cell);
         }
 
@@ -208,6 +214,8 @@ class Row extends Div {
         this.winrate_cell = this.create_div("");
         cell.append(this.winrate_cell);
         this.div.append(cell);
+
+        this.table.div.append(this.div);
     }
 
     calculation() {
@@ -269,6 +277,7 @@ class Cell extends Div {
         this.pop_up = new PopUp(this);
         this.div.append(this.win_div, this.loose_div);
         this.not_display();
+        this.row.div.append(this.div);
     }
 
     not_display() {
@@ -348,7 +357,7 @@ class PopUp extends Div {
             game_link.href = `https://www.opendota.com/matches/${game.match_id}`;
             pop_up_row.append(game_link);
 
-            if (this.cell.win_game(game)) {
+            if (this.win_game(game)) {
                 pop_up_row.classList.add("green");
             } else {
                 pop_up_row.classList.add("red");
@@ -578,5 +587,60 @@ class DateSelector {
             "Декабрь"
         ];
         return months[id];
+    }
+}
+
+class Plot extends Div {
+    constructor(plots_div, player) {
+        super("plot");
+
+        this.plots_div = plots_div;
+        this.player = player;
+        this.canvas = document.createElement("canvas");
+
+        this.ctx = this.canvas.getContext("2d");
+
+        let plot_body = this.create_div("", "plot-body");
+        this.plot_container = this.create_div("", "plot-container");
+        this.plot_container.append(this.canvas);
+
+        plot_body.append(this.plot_container);
+
+        this.div.append(this.create_div(player.name, "plot-head"));
+        this.div.append(plot_body);
+        plots_div.append(this.div);
+    }
+
+    drawing() {
+        this.player.games.sort((a, b) => a.start_time - b.start_time);
+        let r = 2;
+        let delta = r * 1.2 * 2 ** 0.5;
+        this.canvas.width = this.player.games.length * delta + 20;
+        this.canvas.height = 1000;
+        this.plot_container.style.width = `${this.player.games.length * delta}px`;
+        this.plot_container.style.height = `1000px`;
+
+        let x = 0;
+        let y = 300;
+
+        for (let game of this.player.games) {
+            if (game.hero_id == 0) continue;
+            let color = "red";
+            let delta_y = delta;
+            if (this.win_game(game)) {
+                color = "green";
+                delta_y = -delta;
+            }
+            x += delta;
+            y += delta_y;
+
+            this.ctx.beginPath();
+            this.ctx.fillStyle = color;
+            this.ctx.arc(x, y, r, 0, 2 * Math.PI);
+            this.ctx.fill();
+        }
+
+        // this.canvas.width = x;
+        // this.canvas.height = y;
     }
 }

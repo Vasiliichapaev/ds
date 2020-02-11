@@ -613,6 +613,7 @@ class Plot extends Div {
 
     async drawing() {
         this.player.games.sort((a, b) => a.start_time - b.start_time);
+
         const r = 2.5;
         const delta = r * 1.2 * 2 ** 0.5;
         const width = (this.player.games.length + 2) * delta;

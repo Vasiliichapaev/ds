@@ -1,5 +1,5 @@
 body {
-    background: linear-gradient(45grad, #2b8ef4, #c5dde8);
+    background: linear-gradient(45grad, #7b1e30, #0457ad);
     font-family: Arial, Helvetica, sans-serif;
     -webkit-user-select: none;
     -moz-user-select: none;
@@ -11,8 +11,11 @@ body {
     min-width: 1400px;
 }
 
+.header {
+    height: 50px;
+}
+
 .content {
-    margin-top: 50px;
     flex-grow: 1;
     display: flex;
     align-items: center;
@@ -172,7 +175,7 @@ body {
     top: -2px;
     left: -2px;
     position: absolute;
-    background-color: #65b1ef;
+    background: linear-gradient(90grad, #7b1e30, #0457ad);
     z-index: 1;
     padding: 5px;
     border: 2px azure solid;
@@ -315,13 +318,18 @@ body {
 .plot-head {
     font-size: 24px;
     color: azure;
+    margin-bottom: 5px;
 }
 
 .plot-body {
     width: 1300px;
     overflow: scroll;
-    background-color: #e6dbdb;
+    background-color: #eff4f9;
     height: 350px;
+}
+
+.plot-container {
+    margin: 10px;
 }
 
 .footer {

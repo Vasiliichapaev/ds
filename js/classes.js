@@ -615,12 +615,14 @@ class Plot extends Div {
         this.player.games.sort((a, b) => a.start_time - b.start_time);
         const r = 2.5;
         const delta = r * 1.2 * 2 ** 0.5;
-        const width = this.player.games.length * delta + 20;
+        const width = (this.player.games.length + 2) * delta;
+        let x = 0;
+        let y = 0;
         let current_height = 0;
         let max_height = 0;
         let min_height = 0;
-        this.canvas.width = width;
-        this.plot_container.style.width = `${width}px`;
+        this.canvas.width = width + 50;
+        this.plot_container.style.width = `${width + 50}px`;
 
         for (let game of this.player.games) {
             if (game.hero_id == 0) continue;
@@ -633,12 +635,51 @@ class Plot extends Div {
             if (min_height > current_height) min_height = current_height;
         }
 
-        const height = Math.abs((max_height - min_height) * delta) + 10;
+        if (max_height < 10) {
+            max_height = 10;
+        } else {
+            max_height = parseInt((max_height / 10).toFixed()) * 10;
+        }
+
+        if (min_height > -10) {
+            min_height = -10;
+        } else {
+            min_height = parseInt((min_height / 10).toFixed()) * 10;
+        }
+
+        const height = Math.abs((max_height - min_height + 4) * delta);
+
         this.canvas.height = height;
         this.plot_container.style.height = `${height}px`;
 
-        let x = 0;
-        let y = max_height * delta + 5;
+        for (let current_height = min_height; current_height <= max_height; current_height += 10) {
+            x = 0;
+            y = -1 * (current_height - max_height - 2) * delta;
+            this.ctx.beginPath();
+            this.ctx.moveTo(x, y);
+            x = width;
+            this.ctx.lineTo(x, y);
+            this.ctx.lineWidth = 0.3;
+            if (current_height == 0) this.ctx.lineWidth = 1.2;
+            this.ctx.stroke();
+
+            this.ctx.font = "italic 12px Arial";
+            this.ctx.textBaseline = "middle";
+            this.ctx.textAlign = "start";
+            this.ctx.fillText(current_height, width + 10, y);
+        }
+
+        x = width;
+        y = -1 * (min_height - max_height - 2) * delta;
+        this.ctx.beginPath();
+        this.ctx.moveTo(x, y);
+        y = -1 * -2 * delta;
+        this.ctx.lineTo(x, y);
+        this.ctx.lineWidth = 0.3;
+        this.ctx.stroke();
+
+        x = 0;
+        y = -1 * (-max_height - 2) * delta;
 
         for (let game of this.player.games) {
             if (game.hero_id == 0) continue;
@@ -657,7 +698,7 @@ class Plot extends Div {
             this.ctx.fill();
         }
 
-        this.plot_body.scrollLeft += width;
-        this.plot_body.scrollTop += -current_height * delta;
+        this.plot_body.scrollLeft = width;
+        this.plot_body.scrollTop = -1 * (current_height - max_height + 5) * delta;
     }
 }

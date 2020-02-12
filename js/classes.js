@@ -89,19 +89,28 @@ class Table {
         this.year = main.now_year;
         this.month = main.now_month;
         this.days = new Date(this.year, this.month + 1, 0).getDate();
-
         this.rows = [];
-        this.rows.push(new HeadRow(this));
+
+        this.head_row = new HeadRow(this);
+        this.div.append(this.head_row.div);
+
         for (let player of this.main.players) {
-            let row = new Row(this, player);
-            this.rows.push(row);
+            this.add_row(player);
         }
+    }
+
+    add_row(player) {
+        const row = new Row(this, player);
+        this.rows.push(row);
+        this.div.append(row.div);
     }
 
     calculation() {
         this.days = new Date(this.year, this.month + 1, 0).getDate();
         this.start = new Date(this.year, this.month) / 1000;
         this.end = this.start + this.days * 24 * 3600;
+
+        this.head_row.calculation();
 
         for (let row of this.rows) {
             row.calculation();
@@ -132,7 +141,7 @@ class HeadRow extends Div {
     constructor(table) {
         super("row");
         this.table = table;
-        this.days = [];
+        this.cells = [];
 
         let cell = this.create_div("", "player-name");
         cell.append(this.create_div("Игроки", "margin-auto"));
@@ -142,7 +151,7 @@ class HeadRow extends Div {
             cell = this.create_div("", "cell");
             cell.append(this.create_div(day, "margin-auto"));
             this.div.append(cell);
-            this.days.push(cell);
+            this.cells.push(cell);
         }
 
         cell = this.create_div("", "cell");
@@ -157,28 +166,26 @@ class HeadRow extends Div {
         cell.append(this.create_div("W/(W+L)", "margin-auto"));
         this.div.append(cell);
 
-        this.table.div.append(this.div);
-
         this.calculation();
     }
 
     calculation() {
         for (let day = 31; day > 28; day--) {
-            this.days[day - 1].classList.remove("not-display");
+            this.cells[day - 1].classList.remove("not-display");
         }
 
         for (let day = 31; day > this.table.days; day--) {
-            this.days[day - 1].classList.add("not-display");
+            this.cells[day - 1].classList.add("not-display");
         }
 
-        for (let day = 0; day < this.days.length; day++) {
-            this.days[day].classList.remove("current-day");
+        for (let day = 0; day < this.cells.length; day++) {
+            this.cells[day].classList.remove("current-day");
             if (
                 this.table.year == this.table.main.now_year &&
                 this.table.month == this.table.main.now_month &&
                 day + 1 == this.table.main.now_day
             ) {
-                this.days[day].classList.add("current-day");
+                this.cells[day].classList.add("current-day");
             }
         }
     }
@@ -189,15 +196,14 @@ class Row extends Div {
         super("row");
         this.table = table;
         this.player = player;
-        this.days = [];
+        this.cells = [];
 
         let cell = this.create_div("", "player-name");
         cell.append(this.create_div(this.player.name, "player-name-container"));
         this.div.append(cell);
 
         for (let day = 1; day <= 31; day++) {
-            cell = new Cell(this, day);
-            this.days.push(cell);
+            this.add_cell(day);
         }
 
         cell = this.create_div("", "cell");
@@ -218,6 +224,12 @@ class Row extends Div {
         this.table.div.append(this.div);
     }
 
+    add_cell(day) {
+        const cell = new Cell(this, day);
+        this.cells.push(cell);
+        this.div.append(cell.div);
+    }
+
     calculation() {
         this.games = this.player.games.filter(
             elem => elem.start_time >= this.table.start && elem.start_time < this.table.end
@@ -236,10 +248,10 @@ class Row extends Div {
         this.month_wins = 0;
         this.month_looses = 0;
 
-        for (let day of this.days) {
-            day.calculation();
-            this.month_wins += day.wins;
-            this.month_looses += day.looses;
+        for (let cell of this.cells) {
+            cell.calculation();
+            this.month_wins += cell.wins;
+            this.month_looses += cell.looses;
         }
 
         if (this.month_wins > 0) {
@@ -277,7 +289,6 @@ class Cell extends Div {
         this.pop_up = new PopUp(this);
         this.div.append(this.win_div, this.loose_div);
         this.not_display();
-        this.row.div.append(this.div);
     }
 
     not_display() {

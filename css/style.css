@@ -330,6 +330,7 @@ body {
 
 .plot-container {
     margin: 10px;
+    position: relative;
 }
 
 .footer {

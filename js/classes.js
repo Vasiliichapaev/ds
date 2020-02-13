@@ -636,6 +636,21 @@ class Plot extends Div {
         this.canvas.width = width + 50;
         this.plot_container.style.width = `${width + 50}px`;
 
+        this.pop_up = this.create_div("", "pop-up");
+        this.plot_container.append(this.pop_up);
+
+        this.canvas.addEventListener("mousemove", e => {
+            this.pop_up.style.display = "flex";
+            this.pop_up.style.width = "100px";
+            this.pop_up.style.height = "100px";
+            this.pop_up.style.backgroundColor = "red";
+            let x = e.pageX - e.target.offsetLeft,
+                y = e.pageY - e.target.offsetTop;
+
+            // this.pop_up.style.top = `${y}px`;
+            this.pop_up.style.left = `${x}px`;
+        });
+
         for (let game of this.player.games) {
             if (game.hero_id == 0) continue;
             if (this.win_game(game)) {

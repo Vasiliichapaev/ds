@@ -43,6 +43,10 @@ class Main {
     }
 
     calculation() {
+        for (let player of this.players) {
+            player.sort_games();
+        }
+
         this.table.calculation();
 
         for (let plot of this.plots) {
@@ -78,6 +82,11 @@ class Player {
             promise_list.push(response);
         }
         return promise_list;
+    }
+
+    sort_games() {
+        this.games = this.games.filter(elem => elem.hero_id != 0);
+        this.games.sort((a, b) => a.start_time - b.start_time);
     }
 }
 
@@ -234,8 +243,6 @@ class Row extends Div {
         this.games = this.player.games.filter(
             elem => elem.start_time >= this.table.start && elem.start_time < this.table.end
         );
-
-        this.games = this.games.filter(elem => elem.hero_id > 0);
 
         this.wins_cell.innerHTML = "";
         this.loose_cell.innerHTML = "";
@@ -623,8 +630,6 @@ class Plot extends Div {
     }
 
     async drawing() {
-        this.player.games.sort((a, b) => a.start_time - b.start_time);
-
         const r = 2.5;
         const delta = r * 1.2 * 2 ** 0.5;
         const width = (this.player.games.length + 2) * delta;
@@ -636,23 +641,23 @@ class Plot extends Div {
         this.canvas.width = width + 50;
         this.plot_container.style.width = `${width + 50}px`;
 
-        this.pop_up = this.create_div("", "pop-up");
-        this.plot_container.append(this.pop_up);
+        // this.pop_up = this.create_div("", "pop-up");
+        // this.canvas.append(this.pop_up);
 
-        this.canvas.addEventListener("mousemove", e => {
-            this.pop_up.style.display = "flex";
-            this.pop_up.style.width = "100px";
-            this.pop_up.style.height = "100px";
-            this.pop_up.style.backgroundColor = "red";
-            let x = e.pageX - e.target.offsetLeft,
-                y = e.pageY - e.target.offsetTop;
+        // this.plot_container.addEventListener("mouseover", e => {
+        //     this.pop_up.style.display = "flex";
+        //     this.pop_up.style.width = "100px";
+        //     this.pop_up.style.height = "100px";
+        //     this.pop_up.style.backgroundColor = "red";
+        //     let x = e.pageX - e.target.offsetLeft;
+        //     let y = e.pageY - e.target.offsetTop;
 
-            // this.pop_up.style.top = `${y}px`;
-            this.pop_up.style.left = `${x}px`;
-        });
+        //     this.pop_up.innerHTML = x;
+        //     this.pop_up.style.top = `100px`;
+        //     this.pop_up.style.left = `${x}px`;
+        // });
 
         for (let game of this.player.games) {
-            if (game.hero_id == 0) continue;
             if (this.win_game(game)) {
                 current_height++;
             } else {
@@ -709,7 +714,6 @@ class Plot extends Div {
         y = -1 * (-max_height - 2) * delta;
 
         for (let game of this.player.games) {
-            if (game.hero_id == 0) continue;
             let color = "red";
             let delta_y = delta;
             if (this.win_game(game)) {

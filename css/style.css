@@ -333,6 +333,10 @@ body {
     position: relative;
 }
 
+.plot-container canvas {
+    position: relative;
+}
+
 .footer {
     height: 50px;
 }

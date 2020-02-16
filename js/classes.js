@@ -229,8 +229,6 @@ class Row extends Div {
         this.winrate_cell = this.create_div("");
         cell.append(this.winrate_cell);
         this.div.append(cell);
-
-        this.table.div.append(this.div);
     }
 
     add_cell(day) {
@@ -621,12 +619,11 @@ class Plot extends Div {
         this.plot_body = this.create_div("", "plot-body");
         this.plot_container = this.create_div("", "plot-container");
         this.plot_container.append(this.canvas);
-
         this.plot_body.append(this.plot_container);
 
         this.div.append(this.create_div(player.name, "plot-head"));
         this.div.append(this.plot_body);
-        plots_div.append(this.div);
+        this.plots_div.append(this.div);
     }
 
     async drawing() {

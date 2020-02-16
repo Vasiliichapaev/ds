@@ -732,15 +732,21 @@ class PlotPopUP extends Div {
         if (game_number > this.games.length) game_number = this.games.length;
         if (game_number < 1) game_number = 1;
 
-        let current_win_count = this.games[game_number - 1].current_y;
+        const game = this.games[game_number - 1];
+
         let offset = -50;
         if (game_number < 12) offset = 20;
 
         x = game_number * this.plot.delta - 1;
-        this.plot_pop_up_details.innerHTML = `<p>${game_number}</p><p>${current_win_count}</p>`;
+        this.plot_pop_up_details.innerHTML = `<p>${game_number}</p><p>${game.current_y}</p>`;
         this.plot_pop_up_details.style.top = `${y}px`;
         this.plot_pop_up_details.style.left = `${offset}px`;
         this.div.style.left = `${x}px`;
         this.div.style.display = "flex";
+
+        this.div.style.background = "red";
+        if (this.win_game(game)) {
+            this.div.style.background = "green";
+        }
     }
 }

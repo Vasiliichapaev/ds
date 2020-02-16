@@ -335,8 +335,22 @@ body {
 
 .plot-container canvas {
     position: relative;
+    z-index: 2;
 }
 
 .footer {
     height: 50px;
+}
+
+.plot-pop-up {
+    position: absolute;
+    display: none;
+    top: 0px;
+    width: 2px;
+    background: #0457ad;
+}
+
+.plot-pop-up-details {
+    position: absolute;
+    width: 50px;
 }

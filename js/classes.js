@@ -65,6 +65,12 @@ class Main {
             plot.drawing();
         }
     }
+
+    display() {
+        this.date_selector.div.style.display = "flex";
+        this.table.div.style.display = "flex";
+        this.plots_div.style.display = "flex";
+    }
 }
 
 class Player {

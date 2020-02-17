@@ -82,7 +82,7 @@ body {
 .month-pop-up {
     position: absolute;
     display: none;
-    z-index: 2;
+    z-index: 10;
     left: -220px;
     background-color: #3b414d;
     flex-direction: column;
@@ -243,7 +243,7 @@ body {
 .pop-up {
     position: absolute;
     display: none;
-    z-index: 2;
+    z-index: 10;
     left: 34px;
     background-color: #3b414d;
     flex-direction: column;

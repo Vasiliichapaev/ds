@@ -736,8 +736,11 @@ class PlotPopUP extends Div {
 
         let offset = -50;
         if (game_number < 12) offset = 20;
-
         x = game_number * this.plot.delta - 1;
+
+        let h = this.plot.canvas.height;
+        if (y > h - 32) y = h - 32;
+
         this.plot_pop_up_details.innerHTML = `<p>${game_number}</p><p>${game.current_y}</p>`;
         this.plot_pop_up_details.style.top = `${y}px`;
         this.plot_pop_up_details.style.left = `${offset}px`;

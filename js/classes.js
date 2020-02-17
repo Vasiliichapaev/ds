@@ -67,6 +67,7 @@ class Main {
     }
 
     display() {
+        document.querySelector(".loading").style.visibility = "hidden";
         this.date_selector.div.style.visibility = "visible";
         this.table.div.style.visibility = "visible";
         this.plots_div.style.visibility = "visible";

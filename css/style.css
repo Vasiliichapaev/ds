@@ -357,3 +357,29 @@ body {
     position: absolute;
     width: 50px;
 }
+
+.header {
+    display: flex;
+}
+
+.loading {
+    font-size: 30px;
+    margin: auto;
+    padding: 10px;
+
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-name: coloring;
+}
+
+@keyframes coloring {
+    0% {
+        color: azure;
+    }
+    50% {
+        color: transparent;
+    }
+    100% {
+        color: azure;
+    }
+}

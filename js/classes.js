@@ -725,14 +725,28 @@ class Plot extends Div {
         this.plot_body.scrollTop = -1 * (current_y - max_y + 5) * this.delta;
 
         this.add_pop_up();
+
+        this.mousedown = false;
+
+        this.canvas.addEventListener("mousedown", e => {
+            this.mousedown = true;
+        });
+        document.addEventListener("mouseup", e => {
+            this.mousedown = false;
+        });
     }
 
     add_pop_up() {
         this.pop_up = new PlotPopUP(this);
         this.plot_container.append(this.pop_up.div);
-        this.canvas.addEventListener("mousemove", e =>
-            this.pop_up.calculation(e.offsetX, e.offsetY)
-        );
+        this.canvas.addEventListener("mousemove", e => {
+            if (this.mousedown) {
+                this.plot_body.scrollLeft -= e.movementX;
+                this.plot_body.scrollTop -= e.movementY;
+            } else {
+                this.pop_up.calculation(e.offsetX, e.offsetY);
+            }
+        });
     }
 }
 

@@ -1,20 +1,31 @@
 class Main {
     constructor(players_data) {
-        this.players = [];
-        for (let player_data of players_data) {
-            this.players.push(new Player(player_data));
-        }
+        this.get_date();
+        this.add_players(players_data);
+        this.add_table();
+        this.add_plots();
+    }
 
-        this.heroes = [];
-
+    get_date() {
         this.now = new Date();
         this.now_year = this.now.getFullYear();
         this.now_month = this.now.getMonth();
         this.now_day = this.now.getDate();
+    }
 
+    add_players(players_data) {
+        this.players = [];
+        for (let player_data of players_data) {
+            this.players.push(new Player(player_data));
+        }
+    }
+
+    add_table() {
         this.table = new Table(this);
         this.date_selector = new DateSelector(this.table);
+    }
 
+    add_plots() {
         this.plots_div = document.querySelector(".plots");
         this.plots = [];
         for (let player of this.players) {
@@ -25,6 +36,7 @@ class Main {
     async load_data() {
         let promise_list = [];
 
+        this.heroes = [];
         let heroes = fetch(`https://api.opendota.com/api/heroStats`)
             .then(response => response.json())
             .then(result => {

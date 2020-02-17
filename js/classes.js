@@ -67,9 +67,9 @@ class Main {
     }
 
     display() {
-        this.date_selector.div.style.display = "flex";
-        this.table.div.style.display = "flex";
-        this.plots_div.style.display = "flex";
+        this.date_selector.div.style.visibility = "visible";
+        this.table.div.style.visibility = "visible";
+        this.plots_div.style.visibility = "visible";
     }
 }
 

@@ -50,8 +50,8 @@ class Main {
         for (let player of this.players) {
             promise_list = promise_list.concat(player.load_games());
         }
-        let all_promise = await Promise.all(promise_list);
-        return all_promise;
+        await Promise.all(promise_list);
+        return;
     }
 
     calculation() {
@@ -84,13 +84,15 @@ class Player {
     load_games() {
         let promise_list = [];
         for (let account of this.accounts) {
-            let response_string = `https://api.opendota.com/api/players/${account.id}/matches`;
+            let response_string = `https://api.opendota.com/api/players/${account.id}/matches?significant=0`;
             if (account.start_date) {
-                let year = account.start_date[2];
-                let month = account.start_date[1] - 1;
-                let day = account.start_date[0];
-                let days_to_start = (new Date() - new Date(year, month, day)) / (1000 * 3600 * 24);
-                response_string += `?date=${days_to_start.toFixed()}`;
+                const year = account.start_date[2];
+                const month = account.start_date[1] - 1;
+                const day = account.start_date[0];
+                const days_to_start = Math.ceil(
+                    (new Date() - new Date(year, month, day)) / (1000 * 3600 * 24)
+                );
+                response_string += `&date=${days_to_start}`;
             }
 
             let response = fetch(response_string)
@@ -117,11 +119,11 @@ class Table {
         this.year = main.now_year;
         this.month = main.now_month;
         this.days = new Date(this.year, this.month + 1, 0).getDate();
-        this.rows = [];
 
         this.head_row = new HeadRow(this);
         this.div.append(this.head_row.div);
 
+        this.rows = [];
         for (let player of this.main.players) {
             this.add_row(player);
         }

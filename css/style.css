@@ -22,13 +22,13 @@ body {
     align-content: center;
     justify-content: center;
     flex-direction: column;
+    visibility: hidden;
 }
 
 .table {
     position: relative;
     flex-direction: column;
     display: flex;
-    visibility: hidden;
 }
 
 .row {
@@ -121,7 +121,6 @@ body {
     display: flex;
     font-size: 25px;
     align-items: center;
-    visibility: hidden;
 }
 
 .date-box {
@@ -232,11 +231,11 @@ body {
     cursor: pointer;
 }
 
-.select-cell {
+.selectable-cell {
     cursor: pointer;
 }
 
-.select-cell:hover {
+.selectable-cell:hover {
     background-color: #dcc9a5;
 }
 
@@ -309,7 +308,6 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    visibility: hidden;
 }
 
 .plot {

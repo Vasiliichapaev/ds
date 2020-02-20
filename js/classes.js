@@ -56,10 +56,8 @@ class Main {
     }
 
     display() {
-        document.querySelector(".loading").style.visibility = "hidden";
-        this.date_selector.div.style.visibility = "visible";
-        this.table.div.style.visibility = "visible";
-        this.plots_div.style.visibility = "visible";
+        document.querySelector(".loading").style.display = "none";
+        document.querySelector(".content").style.visibility = "visible";
     }
 
     error_load_data() {
@@ -131,24 +129,19 @@ class Table {
     }
 
     add_rows() {
-        this.rows = [];
-        for (let player of this.main.players) {
-            let row = new Row(this, player);
-            this.rows.push(row);
+        this.rows = this.main.players.map(player => {
+            const row = new Row(this, player);
             this.div.append(row.div);
-        }
+            return row;
+        });
     }
 
     calculation() {
         this.days = new Date(this.year, this.month + 1, 0).getDate();
         this.start = new Date(this.year, this.month) / 1000;
         this.end = this.start + this.days * 24 * 3600;
-
         this.head_row.calculation();
-
-        for (let row of this.rows) {
-            row.calculation();
-        }
+        this.rows.forEach(row => row.calculation());
     }
 }
 
@@ -158,7 +151,7 @@ class Div {
     }
 
     create_div(text, ...classes) {
-        let div = document.createElement("div");
+        const div = document.createElement("div");
         div.innerHTML = text;
         div.classList.add(...classes);
         return div;
@@ -175,12 +168,12 @@ class HeadRow extends Div {
     constructor(table) {
         super("row");
         this.table = table;
-        this.cells = [];
 
         let cell = this.create_div("", "player-name");
         cell.append(this.create_div("Игроки", "margin-auto"));
         this.div.append(cell);
 
+        this.cells = [];
         for (let day = 1; day <= 31; day++) {
             cell = this.create_div("", "cell");
             cell.append(this.create_div(day, "margin-auto"));
@@ -230,23 +223,20 @@ class Row extends Div {
         super("row");
         this.table = table;
         this.player = player;
-        this.cells = [];
 
         let cell = this.create_div("", "player-name");
         cell.append(this.create_div(this.player.name, "player-name-container"));
         this.div.append(cell);
 
-        for (let day = 1; day <= 31; day++) {
-            this.add_cell(day);
-        }
+        this.add_cells();
 
         cell = this.create_div("", "cell");
-        this.wins_cell = this.create_div("");
+        this.wins_cell = this.create_div("", "win");
         cell.append(this.wins_cell);
         this.div.append(cell);
 
         cell = this.create_div("", "cell");
-        this.loose_cell = this.create_div("");
+        this.loose_cell = this.create_div("", "loose");
         cell.append(this.loose_cell);
         this.div.append(cell);
 
@@ -256,23 +246,23 @@ class Row extends Div {
         this.div.append(cell);
     }
 
-    add_cell(day) {
-        const cell = new Cell(this, day);
-        this.cells.push(cell);
-        this.div.append(cell.div);
+    add_cells() {
+        this.cells = [];
+        for (let day = 1; day <= 31; day++) {
+            let cell = new Cell(this, day);
+            this.cells.push(cell);
+            this.div.append(cell.div);
+        }
     }
 
     calculation() {
         this.games = this.player.games.filter(
-            elem => elem.start_time >= this.table.start && elem.start_time < this.table.end
+            game => game.start_time >= this.table.start && game.start_time < this.table.end
         );
 
         this.wins_cell.innerHTML = "";
         this.loose_cell.innerHTML = "";
         this.winrate_cell.innerHTML = "";
-
-        this.wins_cell.classList.remove("win", "loose");
-        this.loose_cell.classList.remove("win", "loose");
         this.winrate_cell.classList.remove("win", "loose");
 
         this.month_wins = 0;
@@ -284,18 +274,11 @@ class Row extends Div {
             this.month_looses += cell.looses;
         }
 
-        if (this.month_wins > 0) {
-            this.wins_cell.classList.add("win");
-            this.wins_cell.innerHTML = this.month_wins;
-        }
-
-        if (this.month_looses > 0) {
-            this.loose_cell.classList.add("loose");
-            this.loose_cell.innerHTML = this.month_looses;
-        }
+        if (this.month_wins > 0) this.wins_cell.innerHTML = this.month_wins;
+        if (this.month_looses > 0) this.loose_cell.innerHTML = this.month_looses;
 
         if (this.month_looses + this.month_wins > 0) {
-            let winrate = (this.month_wins / (this.month_looses + this.month_wins)).toFixed(2);
+            const winrate = (this.month_wins / (this.month_looses + this.month_wins)).toFixed(2);
             this.winrate_cell.innerHTML = winrate;
             if (winrate >= 0.5) {
                 this.winrate_cell.classList.add("win");
@@ -303,6 +286,10 @@ class Row extends Div {
                 this.winrate_cell.classList.add("loose");
             }
         }
+        this.add_pop_up();
+    }
+
+    add_pop_up() {
         this.month_pop_up = new MonthPopUp(this);
         this.month_pop_up.create();
     }
@@ -314,14 +301,18 @@ class Cell extends Div {
         this.row = row;
         this.table = row.table;
         this.day = day;
-        this.win_div = this.create_div("", "win");
-        this.loose_div = this.create_div("", "loose");
+        this.add_win_loose_cells();
+        this.not_display_cell_in_current_month();
         this.pop_up = new PopUp(this);
-        this.div.append(this.win_div, this.loose_div);
-        this.not_display();
     }
 
-    not_display() {
+    add_win_loose_cells() {
+        this.win_div = this.create_div("", "win");
+        this.loose_div = this.create_div("", "loose");
+        this.div.append(this.win_div, this.loose_div);
+    }
+
+    not_display_cell_in_current_month() {
         if (this.day > 27) {
             this.div.classList.remove("not-display");
         }
@@ -331,15 +322,14 @@ class Cell extends Div {
     }
 
     calculation() {
-        this.not_display();
+        this.not_display_cell_in_current_month();
 
-        this.start = this.table.start + (this.day - 1) * 3600 * 24;
-        this.end = this.start + 3600 * 24;
+        const start = this.table.start + (this.day - 1) * 3600 * 24;
+        const end = start + 3600 * 24;
 
         this.games = this.row.games.filter(
-            elem => elem.start_time >= this.start && elem.start_time < this.end
+            game => game.start_time >= start && game.start_time < end
         );
-
         this.games.sort((a, b) => b.start_time - a.start_time);
 
         this.win_games = this.games.filter(game => this.win_game(game));
@@ -351,13 +341,9 @@ class Cell extends Div {
         this.win_div.innerHTML = "";
         this.loose_div.innerHTML = "";
 
-        if (this.wins > 0) {
-            this.win_div.innerHTML = this.wins;
-        }
+        if (this.wins > 0) this.win_div.innerHTML = this.wins;
+        if (this.looses > 0) this.loose_div.innerHTML = this.looses;
 
-        if (this.looses > 0) {
-            this.loose_div.innerHTML = this.looses;
-        }
         this.pop_up.create();
     }
 }
@@ -367,21 +353,20 @@ class PopUp extends Div {
         super("pop-up");
         this.cell = cell;
 
-        let pop_up_head = this.create_div("", "pop-up-head");
+        const pop_up_head = this.create_div("", "pop-up-head");
         pop_up_head.append(this.create_div("", "pop-up-hero"));
         pop_up_head.append(this.create_div("У", "pop-up-cell"));
         pop_up_head.append(this.create_div("С", "pop-up-cell"));
         pop_up_head.append(this.create_div("П", "pop-up-cell"));
 
         this.pop_up_body = this.create_div("", "pop-up-body");
-        this.div.append(pop_up_head);
-        this.div.append(this.pop_up_body);
+        this.div.append(pop_up_head, this.pop_up_body);
     }
 
     create() {
         this.heroes = this.cell.table.main.heroes;
 
-        this.cell.div.classList.remove("select-cell");
+        this.cell.div.classList.remove("selectable-cell");
         if (this.cell.div.children[2]) this.cell.div.children[2].remove();
 
         for (let row = this.pop_up_body.children.length - 1; row >= 0; row--) {
@@ -391,10 +376,10 @@ class PopUp extends Div {
         if (this.cell.games.length == 0) return;
 
         for (let game of this.cell.games) {
-            let img_url = this.heroes[game.hero_id].img;
-            let pop_up_row = this.create_div("", "pop-up-row");
+            const img_url = this.heroes[game.hero_id].img;
+            const pop_up_row = this.create_div("", "pop-up-row");
 
-            let game_link = document.createElement("a");
+            const game_link = document.createElement("a");
             game_link.href = `https://www.opendota.com/matches/${game.match_id}`;
             pop_up_row.append(game_link);
 
@@ -404,8 +389,8 @@ class PopUp extends Div {
                 pop_up_row.classList.add("red");
             }
 
-            let pop_up_hero = this.create_div("", "pop-up-hero");
-            let pop_up_hero_img = document.createElement("img");
+            const pop_up_hero = this.create_div("", "pop-up-hero");
+            const pop_up_hero_img = document.createElement("img");
             pop_up_hero_img.src = `https://api.opendota.com${img_url}`;
             pop_up_hero.append(pop_up_hero_img);
             pop_up_row.append(pop_up_hero);
@@ -417,7 +402,7 @@ class PopUp extends Div {
             this.pop_up_body.append(pop_up_row);
         }
 
-        this.cell.div.classList.add("select-cell");
+        this.cell.div.classList.add("selectable-cell");
         this.cell.div.append(this.div);
     }
 }
@@ -429,21 +414,20 @@ class MonthPopUp extends Div {
         this.cell = row.div.children[34];
         this.games = row.games;
 
-        let pop_up_head = this.create_div("", "pop-up-head");
+        const pop_up_head = this.create_div("", "pop-up-head");
         pop_up_head.append(this.create_div("", "pop-up-hero"));
         pop_up_head.append(this.create_div("W", "pop-up-cell", "green"));
         pop_up_head.append(this.create_div("L", "pop-up-cell", "red"));
         pop_up_head.append(this.create_div("W/(W+L)", "pop-up-winrate-cell"));
 
         this.pop_up_body = this.create_div("", "pop-up-body");
-        this.div.append(pop_up_head);
-        this.div.append(this.pop_up_body);
+        this.div.append(pop_up_head, this.pop_up_body);
     }
 
     create() {
         this.heroes = this.row.table.main.heroes;
 
-        this.cell.classList.remove("select-cell");
+        this.cell.classList.remove("selectable-cell");
         if (this.cell.children[1]) this.cell.children[1].remove();
 
         for (let row = this.pop_up_body.children.length - 1; row >= 0; row--) {
@@ -452,37 +436,34 @@ class MonthPopUp extends Div {
 
         if (this.games.length == 0) return;
 
-        let month_heroes_id = new Set();
-        let hero_games = [];
+        const month_heroes_id = new Set();
+        const hero_games = [];
 
         for (let game of this.games) {
             month_heroes_id.add(game.hero_id);
         }
 
         for (let id of month_heroes_id) {
-            let games = this.games.filter(game => game.hero_id == id);
-            let win_games_count = games.filter(game => this.win_game(game)).length;
-            let loose_games_count = games.filter(game => !this.win_game(game)).length;
-            hero_games.push([
-                id,
-                [win_games_count, loose_games_count, win_games_count + loose_games_count]
-            ]);
+            const games = this.games.filter(game => game.hero_id == id);
+            const win_count = games.filter(game => this.win_game(game)).length;
+            const loose_count = games.filter(game => !this.win_game(game)).length;
+            hero_games.push([id, [win_count, loose_count, win_count + loose_count]]);
         }
 
         hero_games.sort((a, b) => b[1][2] - a[1][2]);
 
         for (let hero of hero_games) {
-            let img_url = this.heroes[hero[0]].img;
-            let pop_up_row = this.create_div("", "month-pop-up-row");
-            let pop_up_hero = this.create_div("", "pop-up-hero");
-            let pop_up_hero_img = document.createElement("img");
+            const img_url = this.heroes[hero[0]].img;
+            const pop_up_row = this.create_div("", "month-pop-up-row");
+            const pop_up_hero = this.create_div("", "pop-up-hero");
+            const pop_up_hero_img = document.createElement("img");
 
             pop_up_hero_img.src = `https://api.opendota.com${img_url}`;
             pop_up_hero.append(pop_up_hero_img);
             pop_up_row.append(pop_up_hero);
             this.div.append(pop_up_row);
 
-            let winrate = hero[1][0] / hero[1][2];
+            const winrate = hero[1][0] / hero[1][2];
 
             pop_up_row.append(this.create_div(hero[1][0], "pop-up-cell", "green"));
             pop_up_row.append(this.create_div(hero[1][1], "pop-up-cell", "red"));
@@ -499,7 +480,7 @@ class MonthPopUp extends Div {
             this.pop_up_body.append(pop_up_row);
         }
 
-        this.cell.classList.add("select-cell");
+        this.cell.classList.add("selectable-cell");
         this.cell.append(this.div);
     }
 }

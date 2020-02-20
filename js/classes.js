@@ -14,10 +14,7 @@ class Main {
     }
 
     add_players(players_data) {
-        this.players = [];
-        for (let player_data of players_data) {
-            this.players.push(new Player(player_data));
-        }
+        this.players = players_data.map(player_data => new Player(player_data));
     }
 
     add_table() {
@@ -27,43 +24,35 @@ class Main {
 
     add_plots() {
         this.plots_div = document.querySelector(".plots");
-        this.plots = [];
-        for (let player of this.players) {
-            this.plots.push(new Plot(this.plots_div, player));
-        }
+        this.plots = this.players.map(player => new Plot(this.plots_div, player));
     }
 
-    async load_data() {
-        let promise_list = [];
-
-        this.heroes = [];
-        let heroes = fetch(`https://api.opendota.com/api/heroStats`)
-            .then(response => response.json())
+    load_data() {
+        this.heroes = {};
+        let heroes_promise = fetch(`https://api.opendota.com/api/heroStats`)
+            .then(response => {
+                if (!response.ok) throw Error("Ошибка сервера opendota");
+                return response.json();
+            })
             .then(result => {
-                this.heroes = {};
-                for (let hero of result) {
+                result.forEach(hero => {
                     this.heroes[hero.id] = hero;
-                }
+                });
             });
-        promise_list.push(heroes);
 
-        for (let player of this.players) {
+        let promise_list = [heroes_promise];
+
+        this.players.forEach(player => {
             promise_list = promise_list.concat(player.load_games());
-        }
-        await Promise.all(promise_list);
-        return;
+        });
+
+        return Promise.all(promise_list);
     }
 
     calculation() {
-        for (let player of this.players) {
-            player.sort_games();
-        }
-
+        this.players.forEach(player => player.sort_games());
         this.table.calculation();
-
-        for (let plot of this.plots) {
-            plot.drawing();
-        }
+        this.plots.forEach(plot => plot.drawing());
     }
 
     display() {
@@ -72,16 +61,23 @@ class Main {
         this.table.div.style.visibility = "visible";
         this.plots_div.style.visibility = "visible";
     }
+
+    error_load_data() {
+        const loading = document.querySelector(".loading");
+        loading.innerHTML = "Нет связи с opendota.";
+        loading.classList.remove("loading");
+        loading.classList.add("dont-load");
+    }
 }
 
 class Player {
     constructor(player_data) {
         this.name = player_data.name;
         this.accounts = player_data.accounts;
-        this.games = [];
     }
 
     load_games() {
+        this.games = [];
         let promise_list = [];
         for (let account of this.accounts) {
             let response_string = `https://api.opendota.com/api/players/${account.id}/matches?significant=0`;
@@ -94,12 +90,15 @@ class Player {
                 );
                 response_string += `&date=${days_to_start}`;
             }
-
             let response = fetch(response_string)
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) throw Error("Ошибка сервера opendota");
+                    return response.json();
+                })
                 .then(result => {
                     this.games = this.games.concat(result);
                 });
+
             promise_list.push(response);
         }
         return promise_list;
@@ -115,24 +114,29 @@ class Table {
     constructor(main) {
         this.main = main;
         this.div = document.querySelector(".table");
-
-        this.year = main.now_year;
-        this.month = main.now_month;
-        this.days = new Date(this.year, this.month + 1, 0).getDate();
-
-        this.head_row = new HeadRow(this);
-        this.div.append(this.head_row.div);
-
-        this.rows = [];
-        for (let player of this.main.players) {
-            this.add_row(player);
-        }
+        this.get_date();
+        this.add_head_row();
+        this.add_rows();
     }
 
-    add_row(player) {
-        const row = new Row(this, player);
-        this.rows.push(row);
-        this.div.append(row.div);
+    get_date() {
+        this.year = this.main.now_year;
+        this.month = this.main.now_month;
+        this.days = new Date(this.year, this.month + 1, 0).getDate();
+    }
+
+    add_head_row() {
+        this.head_row = new HeadRow(this);
+        this.div.append(this.head_row.div);
+    }
+
+    add_rows() {
+        this.rows = [];
+        for (let player of this.main.players) {
+            let row = new Row(this, player);
+            this.rows.push(row);
+            this.div.append(row.div);
+        }
     }
 
     calculation() {

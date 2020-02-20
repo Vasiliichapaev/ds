@@ -387,3 +387,10 @@ body {
         color: azure;
     }
 }
+
+.dont-load {
+    font-size: 30px;
+    margin: auto;
+    padding: 10px;
+    color: red;
+}

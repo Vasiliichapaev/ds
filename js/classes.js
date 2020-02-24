@@ -828,6 +828,7 @@ class HeroSelector extends Div {
 
             hero_img.src = `https://api.opendota.com${img_url}`;
             hero_img.id = id;
+            hero_img.title = this.heroes[id].localized_name;
             this.div.append(hero_img);
         }
         plot.div.append(this.div);
@@ -842,9 +843,19 @@ class HeroSelector extends Div {
         if (id == "") {
             this.plot.drawing();
             this.plot_hero_select.innerHTML = "Все герои";
+            for (let i = 1; i < this.div.children.length; i++) {
+                this.div.children[i].style.opacity = "100%";
+            }
         } else {
             this.plot.drawing(id);
             this.plot_hero_select.innerHTML = this.heroes[id].localized_name;
+            for (let i = 1; i < this.div.children.length; i++) {
+                if (this.div.children[i].id == id) {
+                    this.div.children[i].style.opacity = "100%";
+                } else {
+                    this.div.children[i].style.opacity = "10%";
+                }
+            }
         }
         this.div.style.display = "none";
     }

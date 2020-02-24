@@ -24,7 +24,7 @@ class Main {
 
     add_plots() {
         this.plots_div = document.querySelector(".plots");
-        this.plots = this.players.map(player => new Plot(this.plots_div, player));
+        this.plots = this.players.map(player => new Plot(this.plots_div, player, this));
     }
 
     load_data() {
@@ -53,6 +53,7 @@ class Main {
         this.players.forEach(player => player.sort_games());
         this.table.calculation();
         this.plots.forEach(plot => plot.drawing());
+        this.plots.forEach(plot => plot.add_hero_selector());
     }
 
     display() {
@@ -613,7 +614,7 @@ class DateSelector {
 }
 
 class Plot extends Div {
-    constructor(plots_div, player) {
+    constructor(plots_div, player, main) {
         super("plot");
 
         this.plots_div = plots_div;
@@ -621,23 +622,31 @@ class Plot extends Div {
         this.canvas = document.createElement("canvas");
         this.ctx = this.canvas.getContext("2d");
 
-        this.plot_cover = this.create_div("", "plot-cover");
-
         this.plot_body = this.create_div("", "plot-body");
         this.plot_container = this.create_div("", "plot-container");
+        this.plot_cover = this.create_div("", "plot-cover");
         this.plot_container.append(this.canvas, this.plot_cover);
         this.plot_body.append(this.plot_container);
 
         this.div.append(this.create_div(player.name, "plot-head"));
         this.div.append(this.plot_body);
+
         this.plots_div.append(this.div);
     }
 
-    async drawing() {
-        this.games = this.player.games;
+    async drawing(hero_id) {
+        this.remove_pop_up();
+
+        if (hero_id) {
+            this.games = this.player.games.filter(game => game.hero_id == hero_id);
+        } else {
+            this.games = this.player.games;
+        }
+
         const r = 2.5;
         this.delta = r * 1.2 * 2 ** 0.5;
-        const width = (this.games.length + 2) * this.delta;
+        let width = (this.games.length + 2) * this.delta;
+        if (width < 1250) width = 1250;
         let x = 0;
         let y = 0;
         let current_y = 0;
@@ -658,10 +667,16 @@ class Plot extends Div {
             if (min_y > current_y) min_y = current_y;
         }
 
+        if (max_y - min_y < 80) {
+            const dy = (80 - (max_y - min_y)) / 2;
+            max_y += dy;
+            min_y -= dy;
+        }
+
         max_y = Math.ceil(max_y / 10) * 10;
         min_y = Math.floor(min_y / 10) * 10;
 
-        const height = (max_y - min_y + 4) * this.delta;
+        let height = (max_y - min_y + 4) * this.delta;
 
         this.canvas.height = height;
         this.plot_container.style.height = `${height}px`;
@@ -693,6 +708,8 @@ class Plot extends Div {
         this.ctx.lineWidth = 0.3;
         this.ctx.stroke();
 
+        if (this.games.length == 0) return;
+
         x = 0;
         y = -1 * (-max_y - 2) * this.delta;
 
@@ -716,7 +733,6 @@ class Plot extends Div {
         this.plot_body.scrollTop = -1 * (current_y - max_y + 5) * this.delta;
 
         this.add_pop_up();
-
         this.mousedown = false;
 
         this.plot_cover.addEventListener("mousedown", e => {
@@ -725,6 +741,14 @@ class Plot extends Div {
         document.addEventListener("mouseup", e => {
             this.mousedown = false;
         });
+    }
+
+    add_hero_selector() {
+        this.hero_selector = new HeroSelector(this, main.heroes);
+    }
+
+    remove_pop_up() {
+        if (this.pop_up) this.pop_up.div.remove();
     }
 
     add_pop_up() {
@@ -775,5 +799,51 @@ class PlotPopUP extends Div {
         if (this.win_game(game)) {
             this.div.style.background = "green";
         }
+    }
+}
+
+class HeroSelector extends Div {
+    constructor(plot, heroes) {
+        super("hero-selector");
+        this.heroes = heroes;
+        this.plot = plot;
+
+        this.all_heroes = this.create_div("Все герои", "all-hero");
+        this.all_heroes.addEventListener("click", e => this.hide_selector(e));
+
+        this.div.append(this.all_heroes);
+
+        this.plot_hero_select = this.create_div("Все герои", "plot-hero-select");
+        plot.div.append(this.plot_hero_select);
+
+        this.plot_hero_select.addEventListener("click", () => this.show_selector());
+
+        for (let id in this.heroes) {
+            let img_url = this.heroes[id].img;
+            let hero_img = document.createElement("img");
+
+            hero_img.addEventListener("click", e => this.hide_selector(e));
+
+            hero_img.src = `https://api.opendota.com${img_url}`;
+            hero_img.id = id;
+            this.div.append(hero_img);
+        }
+        plot.div.append(this.div);
+    }
+
+    show_selector() {
+        this.div.style.display = "flex";
+    }
+
+    hide_selector(e) {
+        const id = e.target.id;
+        if (id == "") {
+            this.plot.drawing();
+            this.plot_hero_select.innerHTML = "Все герои";
+        } else {
+            this.plot.drawing(id);
+            this.plot_hero_select.innerHTML = this.heroes[id].localized_name;
+        }
+        this.div.style.display = "none";
     }
 }

@@ -311,6 +311,7 @@ body {
 }
 
 .plot {
+    position: relative;
     margin-top: 30px;
     display: flex;
     flex-direction: column;
@@ -396,4 +397,35 @@ body {
 
 .plot-cover:active {
     cursor: all-scroll;
+}
+
+.hero-selector {
+    display: flex;
+    flex-wrap: wrap;
+    width: 378px;
+    position: absolute;
+    background-color: #3b414d;
+    z-index: 20;
+    display: none;
+    left: 0;
+}
+
+.all-hero {
+    width: 378px;
+    height: 25px;
+    color: azure;
+    text-align: center;
+    font-size: 20px;
+}
+
+.hero-selector img {
+    height: 25px;
+    width: 42px;
+}
+
+.plot-hero-select {
+    position: absolute;
+    color: azure;
+    font-size: 20px;
+    left: 0;
 }

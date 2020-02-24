@@ -331,17 +331,11 @@ body {
 }
 
 .plot-container {
-    margin: 10px;
     position: relative;
 }
 
 .plot-container canvas {
     position: relative;
-    z-index: 2;
-}
-
-.plot-container canvas:active {
-    cursor: all-scroll;
 }
 
 .footer {
@@ -353,6 +347,7 @@ body {
     display: none;
     top: 0px;
     width: 2px;
+    z-index: 1;
 }
 
 .plot-pop-up-details {
@@ -391,4 +386,14 @@ body {
     margin: auto;
     padding: 10px;
     color: red;
+}
+
+.plot-cover {
+    position: absolute;
+    top: 0;
+    z-index: 2;
+}
+
+.plot-cover:active {
+    cursor: all-scroll;
 }

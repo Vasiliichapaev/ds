@@ -76,14 +76,14 @@ class Player {
 
     load_games() {
         this.games = [];
-        let promise_list = [];
+        const promise_list = [];
         for (let account of this.accounts) {
             let response_string = `https://api.opendota.com/api/players/${account.id}/matches?significant=0`;
             if (account.start_date) {
-                const year = account.start_date[2];
-                const month = account.start_date[1] - 1;
-                const day = account.start_date[0];
-                const days_to_start = Math.ceil(
+                let year = account.start_date[2];
+                let month = account.start_date[1] - 1;
+                let day = account.start_date[0];
+                let days_to_start = Math.ceil(
                     (new Date() - new Date(year, month, day)) / (1000 * 3600 * 24)
                 );
                 response_string += `&date=${days_to_start}`;
@@ -376,10 +376,10 @@ class PopUp extends Div {
         if (this.cell.games.length == 0) return;
 
         for (let game of this.cell.games) {
-            const img_url = this.heroes[game.hero_id].img;
-            const pop_up_row = this.create_div("", "pop-up-row");
+            let img_url = this.heroes[game.hero_id].img;
+            let pop_up_row = this.create_div("", "pop-up-row");
 
-            const game_link = document.createElement("a");
+            let game_link = document.createElement("a");
             game_link.href = `https://www.opendota.com/matches/${game.match_id}`;
             pop_up_row.append(game_link);
 
@@ -389,8 +389,8 @@ class PopUp extends Div {
                 pop_up_row.classList.add("red");
             }
 
-            const pop_up_hero = this.create_div("", "pop-up-hero");
-            const pop_up_hero_img = document.createElement("img");
+            let pop_up_hero = this.create_div("", "pop-up-hero");
+            let pop_up_hero_img = document.createElement("img");
             pop_up_hero_img.src = `https://api.opendota.com${img_url}`;
             pop_up_hero.append(pop_up_hero_img);
             pop_up_row.append(pop_up_hero);
@@ -444,26 +444,26 @@ class MonthPopUp extends Div {
         }
 
         for (let id of month_heroes_id) {
-            const games = this.games.filter(game => game.hero_id == id);
-            const win_count = games.filter(game => this.win_game(game)).length;
-            const loose_count = games.filter(game => !this.win_game(game)).length;
+            let games = this.games.filter(game => game.hero_id == id);
+            let win_count = games.filter(game => this.win_game(game)).length;
+            let loose_count = games.filter(game => !this.win_game(game)).length;
             hero_games.push([id, [win_count, loose_count, win_count + loose_count]]);
         }
 
         hero_games.sort((a, b) => b[1][2] - a[1][2]);
 
         for (let hero of hero_games) {
-            const img_url = this.heroes[hero[0]].img;
-            const pop_up_row = this.create_div("", "month-pop-up-row");
-            const pop_up_hero = this.create_div("", "pop-up-hero");
-            const pop_up_hero_img = document.createElement("img");
+            let img_url = this.heroes[hero[0]].img;
+            let pop_up_row = this.create_div("", "month-pop-up-row");
+            let pop_up_hero = this.create_div("", "pop-up-hero");
+            let pop_up_hero_img = document.createElement("img");
 
             pop_up_hero_img.src = `https://api.opendota.com${img_url}`;
             pop_up_hero.append(pop_up_hero_img);
             pop_up_row.append(pop_up_hero);
             this.div.append(pop_up_row);
 
-            const winrate = hero[1][0] / hero[1][2];
+            let winrate = hero[1][0] / hero[1][2];
 
             pop_up_row.append(this.create_div(hero[1][0], "pop-up-cell", "green"));
             pop_up_row.append(this.create_div(hero[1][1], "pop-up-cell", "red"));
@@ -494,9 +494,9 @@ class DateSelector {
 
         this.div = document.querySelector(".date-selector");
 
-        let previous_month = this.div.children[0];
-        let date_box = this.div.children[1];
-        let next_month = this.div.children[2];
+        const previous_month = this.div.children[0];
+        const date_box = this.div.children[1];
+        const next_month = this.div.children[2];
 
         previous_month.addEventListener("click", () => this.previous_month());
         next_month.addEventListener("click", () => this.next_month());
@@ -506,8 +506,8 @@ class DateSelector {
             if (e.key === "ArrowRight") this.next_month();
         });
 
-        let current_date = date_box.children[0];
-        let date_list = date_box.children[1];
+        const current_date = date_box.children[0];
+        const date_list = date_box.children[1];
         date_list.addEventListener("mouseleave", () => this.calculation());
 
         this.year_div = current_date.children[0];
@@ -621,9 +621,11 @@ class Plot extends Div {
         this.canvas = document.createElement("canvas");
         this.ctx = this.canvas.getContext("2d");
 
+        this.plot_cover = this.create_div("", "plot-cover");
+
         this.plot_body = this.create_div("", "plot-body");
         this.plot_container = this.create_div("", "plot-container");
-        this.plot_container.append(this.canvas);
+        this.plot_container.append(this.canvas, this.plot_cover);
         this.plot_body.append(this.plot_container);
 
         this.div.append(this.create_div(player.name, "plot-head"));
@@ -643,6 +645,7 @@ class Plot extends Div {
         let min_y = -10;
         this.canvas.width = width + 50;
         this.plot_container.style.width = `${width + 50}px`;
+        this.plot_cover.style.width = `${width + 50}px`;
 
         for (let game of this.games) {
             if (this.win_game(game)) {
@@ -662,6 +665,7 @@ class Plot extends Div {
 
         this.canvas.height = height;
         this.plot_container.style.height = `${height}px`;
+        this.plot_cover.style.height = `${height}px`;
 
         for (let current_y = min_y; current_y <= max_y; current_y += 10) {
             x = 0;
@@ -715,7 +719,7 @@ class Plot extends Div {
 
         this.mousedown = false;
 
-        this.canvas.addEventListener("mousedown", e => {
+        this.plot_cover.addEventListener("mousedown", e => {
             this.mousedown = true;
         });
         document.addEventListener("mouseup", e => {
@@ -726,7 +730,7 @@ class Plot extends Div {
     add_pop_up() {
         this.pop_up = new PlotPopUP(this);
         this.plot_container.append(this.pop_up.div);
-        this.canvas.addEventListener("mousemove", e => {
+        this.plot_cover.addEventListener("mousemove", e => {
             if (this.mousedown) {
                 this.plot_body.scrollLeft -= e.movementX;
                 this.plot_body.scrollTop -= e.movementY;

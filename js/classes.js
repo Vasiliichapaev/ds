@@ -625,8 +625,16 @@ class Plot extends Div {
         this.plot_body = this.create_div("", "plot-body");
         this.plot_container = this.create_div("", "plot-container");
         this.plot_cover = this.create_div("", "plot-cover");
+        this.plot_cover.addEventListener("mousemove", e => this.plot_scroll(e));
         this.plot_container.append(this.canvas, this.plot_cover);
         this.plot_body.append(this.plot_container);
+
+        this.plot_cover.addEventListener("mousedown", e => {
+            this.mousedown = true;
+        });
+        document.addEventListener("mouseup", e => {
+            this.mousedown = false;
+        });
 
         this.div.append(this.create_div(player.name, "plot-head"));
         this.div.append(this.plot_body);
@@ -734,13 +742,6 @@ class Plot extends Div {
 
         this.add_pop_up();
         this.mousedown = false;
-
-        this.plot_cover.addEventListener("mousedown", e => {
-            this.mousedown = true;
-        });
-        document.addEventListener("mouseup", e => {
-            this.mousedown = false;
-        });
     }
 
     add_hero_selector() {
@@ -754,14 +755,15 @@ class Plot extends Div {
     add_pop_up() {
         this.pop_up = new PlotPopUP(this);
         this.plot_container.append(this.pop_up.div);
-        this.plot_cover.addEventListener("mousemove", e => {
-            if (this.mousedown) {
-                this.plot_body.scrollLeft -= e.movementX;
-                this.plot_body.scrollTop -= e.movementY;
-            } else {
-                this.pop_up.calculation(e.offsetX, e.offsetY);
-            }
-        });
+    }
+
+    plot_scroll(e) {
+        if (this.mousedown) {
+            this.plot_body.scrollLeft -= e.movementX;
+            this.plot_body.scrollTop -= e.movementY;
+        } else {
+            this.pop_up.calculation(e.offsetX, e.offsetY);
+        }
     }
 }
 

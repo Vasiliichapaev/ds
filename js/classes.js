@@ -625,10 +625,10 @@ class Plot extends Div {
         this.plot_body = this.create_div("", "plot-body");
         this.plot_container = this.create_div("", "plot-container");
         this.plot_cover = this.create_div("", "plot-cover");
-        this.plot_cover.addEventListener("mousemove", e => this.plot_scroll(e));
         this.plot_container.append(this.canvas, this.plot_cover);
         this.plot_body.append(this.plot_container);
 
+        this.plot_cover.addEventListener("mousemove", e => this.plot_scroll(e));
         this.plot_cover.addEventListener("mousedown", e => {
             this.mousedown = true;
         });

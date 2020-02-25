@@ -408,6 +408,7 @@ body {
     z-index: 20;
     display: none;
     left: 0;
+    top: 25px;
 }
 
 .all-hero {

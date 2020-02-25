@@ -746,6 +746,7 @@ class Plot extends Div {
 
     add_hero_selector() {
         this.hero_selector = new HeroSelector(this, main.heroes);
+        this.div.append(this.hero_selector.div);
     }
 
     remove_pop_up() {
@@ -809,9 +810,10 @@ class HeroSelector extends Div {
         super("hero-selector");
         this.heroes = heroes;
         this.plot = plot;
+        this.heroes_img = [];
 
         this.all_heroes = this.create_div("Все герои", "all-hero");
-        this.all_heroes.addEventListener("click", e => this.hide_selector(e));
+        this.all_heroes.addEventListener("click", e => this.hide_selector(e.target.id));
 
         this.div.append(this.all_heroes);
 
@@ -824,39 +826,80 @@ class HeroSelector extends Div {
             let img_url = this.heroes[id].img;
             let hero_img = document.createElement("img");
 
-            hero_img.addEventListener("click", e => this.hide_selector(e));
+            hero_img.addEventListener("click", e => this.hide_selector(e.target.id));
 
             hero_img.src = `https://api.opendota.com${img_url}`;
             hero_img.id = id;
             hero_img.title = this.heroes[id].localized_name;
+            this.heroes_img.push(hero_img);
             this.div.append(hero_img);
         }
-        plot.div.append(this.div);
+        this.open_selector = false;
+        this.hero_name = "";
+        this.hero_id = "";
+        document.addEventListener("keydown", e => {
+            if (this.open_selector) {
+                if (e.key.search(/^[a-zA-Z]$/) == 0 || e.key == " ") {
+                    this.hero_name += e.key;
+                    e.preventDefault();
+                    this.select_hero_for_letters();
+                } else if (e.key == "Backspace") {
+                    this.hero_name = this.hero_name.slice(0, this.hero_name.length - 1);
+                    this.select_hero_for_letters();
+                } else if (e.key == "Enter" || e.key == "Escape") {
+                    this.select_hero_for_letters();
+                    this.hide_selector(this.hero_id);
+                }
+            }
+        });
+    }
+
+    select_hero_for_letters() {
+        let one_hero = 0;
+        this.plot_hero_select.innerHTML = this.hero_name;
+        this.heroes_img.forEach(hero_img => {
+            if (hero_img.title.toLowerCase().search(this.hero_name.toLowerCase()) != -1) {
+                hero_img.style.opacity = "100%";
+                one_hero++;
+                this.hero_id = hero_img.id;
+            } else {
+                hero_img.style.opacity = "10%";
+            }
+            if (one_hero != 1) this.hero_id = "";
+        });
     }
 
     show_selector() {
         this.div.style.display = "flex";
+        this.open_selector = true;
+        this.plot_hero_select.innerHTML = "";
+        this.hero_name = "";
+        this.hero_id = "";
+        this.select_hero_for_letters();
     }
 
-    hide_selector(e) {
-        const id = e.target.id;
+    hide_selector(id) {
+        this.hero_id = id;
         if (id == "") {
+            this.hero_name = "";
             this.plot.drawing();
             this.plot_hero_select.innerHTML = "Все герои";
-            for (let i = 1; i < this.div.children.length; i++) {
-                this.div.children[i].style.opacity = "100%";
-            }
+            this.heroes_img.forEach(hero_img => {
+                hero_img.style.opacity = "100%";
+            });
         } else {
+            this.hero_name = this.heroes[id].localized_name;
             this.plot.drawing(id);
             this.plot_hero_select.innerHTML = this.heroes[id].localized_name;
-            for (let i = 1; i < this.div.children.length; i++) {
-                if (this.div.children[i].id == id) {
-                    this.div.children[i].style.opacity = "100%";
+            this.heroes_img.forEach(hero_img => {
+                if (hero_img.id == id) {
+                    hero_img.style.opacity = "100%";
                 } else {
-                    this.div.children[i].style.opacity = "10%";
+                    hero_img.style.opacity = "10%";
                 }
-            }
+            });
         }
         this.div.style.display = "none";
+        this.open_selector = false;
     }
 }

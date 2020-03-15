@@ -1,59 +1,23 @@
 class Main {
     constructor(players_data) {
-        this.get_date();
-        this.add_players(players_data);
-        this.add_table();
-        this.add_plots();
-    }
-
-    get_date() {
-        this.now = new Date();
-        this.now_year = this.now.getFullYear();
-        this.now_month = this.now.getMonth();
-        this.now_day = this.now.getDate();
-    }
-
-    add_players(players_data) {
-        this.players = players_data.map(player_data => new Player(player_data));
-    }
-
-    add_table() {
+        this.filter = new Filter(this);
+        this.players = players_data.map(player_data => new Player(this, player_data));
         this.table = new Table(this);
-        this.date_selector = new DateSelector(this.table);
-    }
-
-    add_plots() {
-        this.plots_div = document.querySelector(".plots");
-        this.plots = this.players.map(player => new Plot(this.plots_div, player, this));
+        this.plot = new Plot(this);
     }
 
     load_data() {
-        this.heroes = {};
-        let heroes_promise = fetch(`https://api.opendota.com/api/heroStats`)
-            .then(response => {
-                if (!response.ok) throw Error("Ошибка сервера opendota");
-                return response.json();
-            })
-            .then(result => {
-                result.forEach(hero => {
-                    this.heroes[hero.id] = hero;
-                });
-            });
-
+        const heroes_promise = this.filter.hero_selector.load_data();
         let promise_list = [heroes_promise];
-
         this.players.forEach(player => {
-            promise_list = promise_list.concat(player.load_games());
+             promise_list.push(player.load_games());
         });
-
         return Promise.all(promise_list);
     }
 
     calculation() {
-        this.players.forEach(player => player.sort_games());
         this.table.calculation();
-        this.plots.forEach(plot => plot.drawing());
-        this.plots.forEach(plot => plot.add_hero_selector());
+        this.plot.drawing();
     }
 
     display() {
@@ -67,88 +31,28 @@ class Main {
         loading.classList.remove("loading");
         loading.classList.add("dont-load");
     }
-}
-
-class Player {
-    constructor(player_data) {
-        this.name = player_data.name;
-        this.accounts = player_data.accounts;
+    
+    filter_games() {
+        this.players.forEach(player => player.filter_games());
     }
 
-    load_games() {
-        this.games = [];
-        const promise_list = [];
-        for (let account of this.accounts) {
-            let response_string = `https://api.opendota.com/api/players/${account.id}/matches?significant=0`;
-            if (account.start_date) {
-                let year = account.start_date[2];
-                let month = account.start_date[1] - 1;
-                let day = account.start_date[0];
-                let days_to_start = Math.ceil(
-                    (new Date() - new Date(year, month, day)) / (1000 * 3600 * 24)
-                );
-                response_string += `&date=${days_to_start}`;
-            }
-            let response = fetch(response_string)
-                .then(response => {
-                    if (!response.ok) throw Error("Ошибка сервера opendota");
-                    return response.json();
-                })
-                .then(result => {
-                    this.games = this.games.concat(result);
-                });
-
-            promise_list.push(response);
-        }
-        return promise_list;
-    }
-
-    sort_games() {
-        this.games = this.games.filter(elem => elem.hero_id != 0);
-        this.games.sort((a, b) => a.start_time - b.start_time);
-    }
-}
-
-class Table {
-    constructor(main) {
-        this.main = main;
-        this.div = document.querySelector(".table");
-        this.get_date();
-        this.add_head_row();
-        this.add_rows();
-    }
-
-    get_date() {
-        this.year = this.main.now_year;
-        this.month = this.main.now_month;
-        this.days = new Date(this.year, this.month + 1, 0).getDate();
-    }
-
-    add_head_row() {
-        this.head_row = new HeadRow(this);
-        this.div.append(this.head_row.div);
-    }
-
-    add_rows() {
-        this.rows = this.main.players.map(player => {
-            const row = new Row(this, player);
-            this.div.append(row.div);
-            return row;
+    add_new_player(player_data) {
+        const player = new Player(this, player_data);
+        this.players.push(player); 
+        player.load_games().then(() => {
+            const row = this.table.add_row(player);
+            row.calculation();
         });
     }
 
-    calculation() {
-        this.days = new Date(this.year, this.month + 1, 0).getDate();
-        this.start = new Date(this.year, this.month) / 1000;
-        this.end = this.start + this.days * 24 * 3600;
-        this.head_row.calculation();
-        this.rows.forEach(row => row.calculation());
-    }
 }
+
 
 class Div {
     constructor(...classes) {
-        this.div = this.create_div("", ...classes);
+        if (classes){
+            this.div = this.create_div("", ...classes);
+        }
     }
 
     create_div(text, ...classes) {
@@ -164,6 +68,531 @@ class Div {
         return false;
     }
 }
+
+
+class Player extends Div {
+    constructor(main, player_data) {
+        super();
+        this.main = main;
+        this.filter = main.filter;
+        this.name = player_data.name;
+        this.accounts = player_data.accounts;
+        this.games = [];
+    }
+
+    load_games() {
+        const promise_list = [];
+        this.accounts.forEach(account => promise_list.push(this.load_account(account)));
+        const promises = Promise.all(promise_list);
+        return promises.then(() => this.sort_games());
+    }
+
+    load_account(account) {
+        let response_string = `https://api.opendota.com/api/players/${account.id}/matches?significant=0`;
+        
+        if (account.start_date) {
+            const year = account.start_date[2];
+            const month = account.start_date[1] - 1;
+            const day = account.start_date[0];
+            const days_to_start = Math.ceil(
+                (new Date() - new Date(year, month, day)) / (1000 * 3600 * 24)
+            );
+            response_string += `&date=${days_to_start}`;
+        }
+
+        let response = fetch(response_string)
+            .then(response => {
+                if (!response.ok) throw Error("Ошибка сервера opendota");
+                return response.json();
+            })
+            .then(result => {
+                this.games = this.games.concat(result);
+            });
+        return response;
+    }
+
+    async sort_games() {
+        this.games = this.games.filter(elem => elem.hero_id != 0);
+        this.games.sort((a, b) => a.start_time - b.start_time);
+        this.start_games = this.games;
+    }
+
+    filter_games() {
+        const team = this.filter.team_selector.id;
+        const result = this.filter.result_selector.id;
+        const duration = this.filter.duration_selector.id;
+        const hero = this.filter.hero_selector.id;
+        const game_mode = this.filter.game_mod_selector.id;
+        const lobby_type = this.filter.lobby_type_selector.id;
+        const team_count = this.filter.team_count_selector.id;
+
+        this.games = this.start_games;
+
+        if (team == "0") {
+            this.games = this.games.filter(game => game.player_slot < 6);
+        } else if (team == "1") {
+            this.games = this.games.filter(game => game.player_slot > 6);
+        }
+        if (result == "0") {
+            this.games = this.games.filter(game => this.win_game(game));
+        } else if (result == "1") {
+            this.games = this.games.filter(game => !this.win_game(game));
+        }
+        if (duration != "") {
+            this.games = this.games.filter(game => game.duration <= +duration * 60);
+        }
+        if (hero != "") {
+            this.games = this.games.filter(game => game.hero_id == hero);
+        }
+        if (game_mode != "") {
+            this.games = this.games.filter(game => game.game_mode == game_mode);
+        }
+        if (lobby_type != "") {
+            this.games = this.games.filter(game => game.lobby_type == lobby_type);
+        }
+        if (team_count != "") {
+            this.games = this.games.filter(game => game.party_size == team_count);
+        }
+    }
+
+}
+
+
+class Selector extends Div {
+    constructor(filter, selector_number) {
+        super();
+        this.filter = filter;
+        this.div = filter.div.children[1].children[selector_number];
+        this.id = "";
+        const head = this.div.children[0];
+        const body = this.div.children[1];
+        this.filter_cancel = head.children[1];
+        this.current_select = body.children[0];
+        this.select_list = body.children[1];
+        this.current_select.addEventListener("click", () => this.show_select_list());
+        this.filter_cancel.addEventListener("click", () => this.cancel());
+        this.hide_select_list();
+        this.add_select_to_list();
+        this.hide_filter_cancel();
+    }
+
+    add_select_to_list() {
+        for (let elem of this.select_list.children){
+            elem.addEventListener("click", e => this.select(e));
+        }
+    }
+
+    select(e) {
+        this.hide_select_list();
+        this.show_filter_cancel();
+        this.id = e.target.id;
+        this.current_select.innerHTML = e.target.innerHTML;
+        this.filter.main.filter_games();
+        this.filter.main.calculation();
+        this.current_select.classList.remove("not-filtered");
+    }
+
+    hide_select_list() {
+        this.select_list.classList.add("hide");
+    }
+
+    show_select_list() {
+        this.filter.hide_selectors();
+        this.select_list.classList.remove("hide");
+    }
+
+    hide_filter_cancel() {
+        this.filter_cancel.classList.add("hide");
+    }
+
+    show_filter_cancel() {
+        this.filter_cancel.classList.remove("hide");
+    }
+
+    cancel() {
+        this.filter.hide_selectors();
+        this.hide_filter_cancel();
+        this.current_select.innerHTML = this.default_value;
+        this.id  = "";
+        this.filter.main.filter_games();
+        this.filter.main.calculation();
+        this.current_select.classList.add("not-filtered");
+    }
+}
+
+
+class Filter {
+    constructor(main) {
+        this.main = main;
+        this.div = document.querySelector(".filter");
+        this.team_selector = new TeamSelector(this);
+        this.result_selector = new ResultSelector(this);
+        this.hero_selector = new HeroSelector(this);
+        this.duration_selector = new DurationSelector(this);
+        this.game_mod_selector = new GameModeSelector(this);
+        this.lobby_type_selector = new LobbyTypeSelector(this);
+        this.team_count_selector = new TeamCountSelector(this);
+
+        document.addEventListener("click", e => {
+            if (!this.div.contains(e.target)){
+                this.hide_selectors();
+            }
+        })
+    }
+
+    hide_selectors() {
+        this.team_selector.hide_select_list();
+        this.result_selector.hide_select_list();
+        this.hero_selector.hide_select_list();
+        this.duration_selector.hide_select_list();
+        this.game_mod_selector.hide_select_list();
+        this.lobby_type_selector.hide_select_list();
+        this.team_count_selector.hide_select_list();
+
+    }
+}
+
+
+class TeamSelector extends Selector {
+    constructor (filter) {
+        super(filter, 0)
+        this.default_value = "Обе команды"
+    }
+
+}
+
+
+class ResultSelector extends Selector {
+    constructor (filter) {
+        super(filter, 1)
+        this.default_value = "Любой"
+    }
+
+}
+
+
+
+class DurationSelector extends Selector {
+    constructor (filter){
+        super(filter, 2)
+        this.default_value = "Любая"
+    }
+
+}
+
+
+class HeroSelector extends Selector {
+    constructor (filter) {
+        super(filter, 3)
+        this.default_value = "Все герои"
+        this.heroes_img = [];
+        this.open_selector = true;
+        this.hero_name = "";
+        this.hero_id = "";
+        document.addEventListener("keydown", e => this.key_check(e));
+    }
+
+    key_check(e) {
+        if (this.open_selector) {
+            if (e.key.search(/^[a-zA-Z]$/) == 0 || e.key == " ") {
+                this.hero_name += e.key;
+                e.preventDefault();
+                this.select_hero_for_letters();
+            } else if (e.key == "Backspace") {
+                this.hero_name = this.hero_name.slice(0, this.hero_name.length - 1);
+                this.select_hero_for_letters();
+            } else if (e.key == "Enter" || e.key == "Escape") {
+                this.select_hero_for_letters();
+                this.enter_select();
+            }
+        }
+    }
+
+    load_data() {
+        this.heroes = {};
+        const heroes_promise = fetch(`https://api.opendota.com/api/heroStats`)
+            .then(response => {
+                if (!response.ok) throw Error("Ошибка сервера opendota");
+                return response.json();
+            })
+            .then(result => {
+                result.forEach(hero => {
+                    this.heroes[hero.id] = hero;
+                });
+            });
+        heroes_promise.then(() => this.add_heroes_in_list());
+        return heroes_promise;
+    }
+
+    add_heroes_in_list() {
+        for (let id in this.heroes) {
+            let img_url = this.heroes[id].img;
+            let hero_img = document.createElement("img");
+            hero_img.addEventListener("click", e => this.select(e));
+            hero_img.src = `https://api.opendota.com${img_url}`;
+            hero_img.id = id;
+            hero_img.title = this.heroes[id].localized_name;
+            this.select_list.append(hero_img);
+            this.heroes_img.push(hero_img);
+        }
+    }
+
+
+    select(e) {
+        this.id = e.target.id;
+        this.hide_select_list();
+        this.show_filter_cancel();
+        this.filter.main.filter_games();
+        this.filter.main.calculation();
+        this.current_select.classList.remove("not-filtered");
+    }
+
+    enter_select() {
+        this.id = this.hero_id;
+        this.hide_select_list();
+        this.show_filter_cancel();
+        this.filter.main.filter_games();
+        this.filter.main.calculation();
+        this.current_select.classList.remove("not-filtered");
+    }
+
+    select_hero_for_letters() {
+        let one_hero = 0;
+        this.current_select.innerHTML = this.hero_name;
+        this.heroes_img.forEach(hero_img => {
+            if (hero_img.title.toLowerCase().search(this.hero_name.toLowerCase()) != -1) {
+                hero_img.style.opacity = "100%";
+                one_hero++;
+                this.hero_id = hero_img.id;
+            } else {
+                hero_img.style.opacity = "10%";
+            }
+            if (one_hero != 1) this.hero_id = "";
+        });
+    }
+
+    show_select_list() {
+        this.filter.hide_selectors();
+        this.select_list.classList.remove("hide");
+        this.open_selector = true;
+        this.current_select.innerHTML = "";
+        this.hero_name = "";
+        this.hero_id = "";
+        this.select_hero_for_letters();
+    }
+
+    hide_select_list() {
+        this.select_list.classList.add("hide");
+        this.open_selector = false;
+        if (this.id == "") {
+            this.hero_name = "";
+            this.current_select.innerHTML = "Все герои";
+        } else {
+            this.current_select.innerHTML = this.heroes[this.id].localized_name; 
+        }
+    }
+
+}
+
+
+class GameModeSelector extends Selector{
+    constructor (filter){
+        super(filter, 4)
+        this.default_value = "Любой"
+    }
+
+}
+
+
+class LobbyTypeSelector extends Selector{
+    constructor (filter){
+        super(filter, 5)
+        this.default_value = "Любое"
+    }
+
+}
+
+
+
+class TeamCountSelector extends Selector{
+    constructor (filter){
+        super(filter, 6)
+        this.default_value = "Любой"
+    }
+
+}
+
+class Table {
+    constructor(main) {
+        this.main = main;
+        this.div = document.querySelector(".table-body");
+        this.date_selector = new DateSelector(this);
+        this.add_head_row();
+        this.rows = [];
+        this.main.players.forEach(player => this.add_row(player));
+        this.rows[0].player_name_container.classList.add("player-name-select");
+    }
+
+    add_head_row() {
+        this.head_row = new HeadRow(this);
+        this.div.append(this.head_row.div);
+    }
+
+    add_row(player) {
+        const row = new Row(this, player);
+        this.div.append(row.div);
+        this.rows.push(row);
+        return row;
+    }
+
+    calculation() {
+        this.year = this.date_selector.year;
+        this.month = this.date_selector.month;
+        this.days = new Date(this.year, this.month + 1, 0).getDate();
+        this.start = new Date(this.year, this.month) / 1000;
+        this.end = this.start + this.days * 24 * 3600;
+        this.head_row.calculation();
+        this.rows.forEach(row => row.calculation());
+    }
+
+    remove_hero_select() {
+        this.rows.forEach(row => {
+            row.div.children[0].classList.remove("player-name-select")
+        });
+    }
+}
+
+
+class DateSelector {
+    constructor(table) {
+        this.table = table;
+        this.div = document.querySelector(".date-selector");
+        this.now = new Date();
+        this.current_year = this.now.getFullYear();
+        this.current_month = this.now.getMonth();
+        this.current_day = this.now.getDate();
+        this.year = this.current_year;
+        this.month = this.current_month;
+
+        const previous_month = this.div.children[0];
+        const date_box = this.div.children[1];
+        const next_month = this.div.children[2];
+
+        previous_month.addEventListener("click", () => this.previous_month());
+        next_month.addEventListener("click", () => this.next_month());
+
+        document.addEventListener("keydown", e => {
+            if (e.key === "ArrowLeft") this.previous_month();
+            if (e.key === "ArrowRight") this.next_month();
+        });
+
+        const current_date = date_box.children[0];
+        const date_list = date_box.children[1];
+        date_list.addEventListener("mouseleave", () => this.calculation());
+
+        this.year_div = current_date.children[0];
+        this.month_div = current_date.children[1];
+
+        this.year_div.innerHTML = this.year;
+        this.month_div.innerHTML = this.month_name(this.month);
+
+        this.year_list = date_list.children[0];
+        this.month_list = date_list.children[1];
+
+        for (let month of this.month_list.children) {
+            month.addEventListener("click", e => this.month_select(e));
+            if (month.id == this.month) {
+                month.classList.add("selected");
+                this.selected_month = month;
+            }
+        }
+
+        for (let year = this.year; year >= 2012; year--) {
+            let year_number = document.createElement("div");
+            year_number.innerHTML = year;
+            year_number.addEventListener("click", e => this.year_select(e));
+            if (year == this.year) {
+                year_number.classList.add("selected");
+                this.selected_year = year_number;
+            }
+            this.year_list.append(year_number);
+        }
+    }
+
+    previous_month() {
+        let date = new Date(this.year, this.month - 1);
+        if (date.getFullYear() < 2012) return;
+        this.year = date.getFullYear();
+        this.month = date.getMonth();
+        this.change_date_in_list();
+        this.calculation();
+    }
+
+    next_month() {
+        let date = new Date(this.year, this.month + 1);
+        if (date.getFullYear() > this.current_year) return;
+        this.year = date.getFullYear();
+        this.month = date.getMonth();
+        this.change_date_in_list();
+        this.calculation();
+    }
+
+    change_date_in_list() {
+        this.selected_month.classList.remove("selected");
+        this.selected_month = this.month_list.children[this.month];
+        this.selected_month.classList.add("selected");
+        this.selected_year.classList.remove("selected");
+        this.selected_year = this.year_list.children[
+            this.year_list.children.length - (this.year - 2012 + 1)
+        ];
+        this.selected_year.classList.add("selected");
+    }
+
+    calculation() {
+        if (this.year == this.table.year && this.month == this.table.month) return;
+        this.year_div.innerHTML = this.year;
+        this.month_div.innerHTML = this.month_name(this.month);
+        this.table.year = this.year;
+        this.table.month = this.month;
+        this.table.calculation();
+    }
+
+    month_select(e) {
+        let selected_month = e.target;
+        this.selected_month.classList.remove("selected");
+        this.selected_month = selected_month;
+        selected_month.classList.add("selected");
+        this.month = Number(selected_month.id);
+    }
+
+    year_select(e) {
+        let selected_year = e.target;
+        this.selected_year.classList.remove("selected");
+        this.selected_year = selected_year;
+        selected_year.classList.add("selected");
+        this.year = selected_year.innerHTML;
+    }
+
+    month_name(id) {
+        const months = [
+            "Январь",
+            "Февраль",
+            "Март",
+            "Апрель",
+            "Май",
+            "Июнь",
+            "Июль",
+            "Август",
+            "Сентябрь",
+            "Октябрь",
+            "Ноябрь",
+            "Декабрь"
+        ];
+        return months[id];
+    }
+}
+
+
 
 class HeadRow extends Div {
     constructor(table) {
@@ -198,6 +627,12 @@ class HeadRow extends Div {
     }
 
     calculation() {
+        const year = this.table.date_selector.year;
+        const month = this.table.date_selector.month;
+        const current_year = this.table.date_selector.current_year;
+        const current_month = this.table.date_selector.current_month;
+        const current_day = this.table.date_selector.current_day;
+
         for (let day = 31; day > 28; day--) {
             this.cells[day - 1].classList.remove("not-display");
         }
@@ -209,9 +644,9 @@ class HeadRow extends Div {
         for (let day = 0; day < this.cells.length; day++) {
             this.cells[day].classList.remove("current-day");
             if (
-                this.table.year == this.table.main.now_year &&
-                this.table.month == this.table.main.now_month &&
-                day + 1 == this.table.main.now_day
+                year == current_year &&
+                month == current_month &&
+                day + 1 == current_day
             ) {
                 this.cells[day].classList.add("current-day");
             }
@@ -225,13 +660,19 @@ class Row extends Div {
         this.table = table;
         this.player = player;
 
-        let cell = this.create_div("", "player-name");
-        cell.append(this.create_div(this.player.name, "player-name-container"));
-        this.div.append(cell);
+        this.player_name_container = this.create_div("", "player-name", "pointer");
+        this.player_name_container.append(this.create_div(this.player.name, "player-name-container"));
+        this.player_name_container.addEventListener("click", e => {
+            this.table.main.plot.player = this.player;
+            this.table.main.plot.drawing();
+            this.table.remove_hero_select();
+            this.player_name_container.classList.add("player-name-select");
+        })
+        this.div.append(this.player_name_container);
 
         this.add_cells();
 
-        cell = this.create_div("", "cell");
+        let cell = this.create_div("", "cell");
         this.wins_cell = this.create_div("", "win");
         cell.append(this.wins_cell);
         this.div.append(cell);
@@ -365,7 +806,7 @@ class PopUp extends Div {
     }
 
     create() {
-        this.heroes = this.cell.table.main.heroes;
+        this.heroes = this.cell.table.main.filter.hero_selector.heroes;
 
         this.cell.div.classList.remove("selectable-cell");
         if (this.cell.div.children[2]) this.cell.div.children[2].remove();
@@ -426,7 +867,7 @@ class MonthPopUp extends Div {
     }
 
     create() {
-        this.heroes = this.row.table.main.heroes;
+        this.heroes = this.row.table.main.filter.hero_selector.heroes;
 
         this.cell.classList.remove("selectable-cell");
         if (this.cell.children[1]) this.cell.children[1].remove();
@@ -486,175 +927,37 @@ class MonthPopUp extends Div {
     }
 }
 
-class DateSelector {
-    constructor(table) {
-        this.main = table.main;
-        this.table = table;
-        this.year = table.year;
-        this.month = table.month;
 
-        this.div = document.querySelector(".date-selector");
-
-        const previous_month = this.div.children[0];
-        const date_box = this.div.children[1];
-        const next_month = this.div.children[2];
-
-        previous_month.addEventListener("click", () => this.previous_month());
-        next_month.addEventListener("click", () => this.next_month());
-
-        document.addEventListener("keydown", e => {
-            if (e.key === "ArrowLeft") this.previous_month();
-            if (e.key === "ArrowRight") this.next_month();
-        });
-
-        const current_date = date_box.children[0];
-        const date_list = date_box.children[1];
-        date_list.addEventListener("mouseleave", () => this.calculation());
-
-        this.year_div = current_date.children[0];
-        this.month_div = current_date.children[1];
-
-        this.year_div.innerHTML = this.year;
-        this.month_div.innerHTML = this.month_name(this.month);
-
-        this.year_list = date_list.children[0];
-        this.month_list = date_list.children[1];
-
-        for (let month of this.month_list.children) {
-            month.addEventListener("click", e => this.month_select(e));
-            if (month.id == this.month) {
-                month.classList.add("selected");
-                this.selected_month = month;
-            }
-        }
-
-        for (let year = this.year; year >= 2012; year--) {
-            let year_number = document.createElement("div");
-            year_number.innerHTML = year;
-            year_number.addEventListener("click", e => this.year_select(e));
-            if (year == this.year) {
-                year_number.classList.add("selected");
-                this.selected_year = year_number;
-            }
-            this.year_list.append(year_number);
-        }
-    }
-
-    previous_month() {
-        let date = new Date(this.year, this.month - 1);
-        if (date.getFullYear() < 2012) return;
-        this.year = date.getFullYear();
-        this.month = date.getMonth();
-        this.change_date_in_list();
-        this.calculation();
-    }
-
-    next_month() {
-        let date = new Date(this.year, this.month + 1);
-        if (date.getFullYear() > this.main.now_year) return;
-        this.year = date.getFullYear();
-        this.month = date.getMonth();
-        this.change_date_in_list();
-        this.calculation();
-    }
-
-    change_date_in_list() {
-        this.selected_month.classList.remove("selected");
-        this.selected_month = this.month_list.children[this.month];
-        this.selected_month.classList.add("selected");
-        this.selected_year.classList.remove("selected");
-        this.selected_year = this.year_list.children[
-            this.year_list.children.length - (this.year - 2012 + 1)
-        ];
-        this.selected_year.classList.add("selected");
-    }
-
-    calculation() {
-        if (this.year == this.table.year && this.month == this.table.month) return;
-        this.year_div.innerHTML = this.year;
-        this.month_div.innerHTML = this.month_name(this.month);
-        this.table.year = this.year;
-        this.table.month = this.month;
-        this.table.calculation();
-    }
-
-    month_select(e) {
-        let selected_month = e.target;
-        this.selected_month.classList.remove("selected");
-        this.selected_month = selected_month;
-        selected_month.classList.add("selected");
-        this.month = Number(selected_month.id);
-    }
-
-    year_select(e) {
-        let selected_year = e.target;
-        this.selected_year.classList.remove("selected");
-        this.selected_year = selected_year;
-        selected_year.classList.add("selected");
-        this.year = selected_year.innerHTML;
-    }
-
-    month_name(id) {
-        const months = [
-            "Январь",
-            "Февраль",
-            "Март",
-            "Апрель",
-            "Май",
-            "Июнь",
-            "Июль",
-            "Август",
-            "Сентябрь",
-            "Октябрь",
-            "Ноябрь",
-            "Декабрь"
-        ];
-        return months[id];
-    }
-}
-
-class Plot extends Div {
-    constructor(plots_div, player, main) {
-        super("plot");
-
-        this.plots_div = plots_div;
-        this.player = player;
+class Plot extends Div{
+    constructor(main) {
+        super();
+        this.main = main;
+        this.player = main.players[0];
+        this.div = document.querySelector(".plot");
         this.canvas = document.createElement("canvas");
-        this.ctx = this.canvas.getContext("2d");
-
+        this.plot_head = this.create_div(this.player.name, "plot-head")
         this.plot_body = this.create_div("", "plot-body");
         this.plot_container = this.create_div("", "plot-container");
         this.plot_cover = this.create_div("", "plot-cover");
         this.plot_container.append(this.canvas, this.plot_cover);
         this.plot_body.append(this.plot_container);
-
+        this.div.append(this.plot_head, this.plot_body);
+        this.ctx = this.canvas.getContext("2d");
         this.plot_cover.addEventListener("mousemove", e => this.plot_scroll(e));
-        this.plot_cover.addEventListener("mousedown", e => {
-            this.mousedown = true;
-        });
-        document.addEventListener("mouseup", e => {
-            this.mousedown = false;
-        });
-
-        this.div.append(this.create_div(player.name, "plot-head"));
-        this.div.append(this.plot_body);
-
-        this.plots_div.append(this.div);
+        this.plot_cover.addEventListener("mousedown", () => this.mousedown = true);
+        document.addEventListener("mouseup", () =>  this.mousedown = false);
     }
 
-    async drawing(hero_id) {
+    drawing() {
         this.remove_pop_up();
 
-        if (hero_id) {
-            this.games = this.player.games.filter(game => game.hero_id == hero_id);
-        } else {
-            this.games = this.player.games;
-        }
+        this.plot_head.innerHTML = this.player.name;
+        this.games = this.player.games;
 
         const r = 2.5;
         this.delta = r * 1.2 * 2 ** 0.5;
         let width = (this.games.length + 2) * this.delta;
-        if (width < 1250) width = 1250;
+        if (width < 1350) width = 1350;
         let x = 0;
         let y = 0;
         let current_y = 0;
@@ -802,104 +1105,5 @@ class PlotPopUP extends Div {
         if (this.win_game(game)) {
             this.div.style.background = "green";
         }
-    }
-}
-
-class HeroSelector extends Div {
-    constructor(plot, heroes) {
-        super("hero-selector");
-        this.heroes = heroes;
-        this.plot = plot;
-        this.heroes_img = [];
-
-        this.all_heroes = this.create_div("Все герои", "all-hero");
-        this.all_heroes.addEventListener("click", e => this.hide_selector(e.target.id));
-
-        this.div.append(this.all_heroes);
-
-        this.plot_hero_select = this.create_div("Все герои", "plot-hero-select");
-        plot.div.append(this.plot_hero_select);
-
-        this.plot_hero_select.addEventListener("click", () => this.show_selector());
-
-        for (let id in this.heroes) {
-            let img_url = this.heroes[id].img;
-            let hero_img = document.createElement("img");
-
-            hero_img.addEventListener("click", e => this.hide_selector(e.target.id));
-
-            hero_img.src = `https://api.opendota.com${img_url}`;
-            hero_img.id = id;
-            hero_img.title = this.heroes[id].localized_name;
-            this.heroes_img.push(hero_img);
-            this.div.append(hero_img);
-        }
-        this.open_selector = false;
-        this.hero_name = "";
-        this.hero_id = "";
-        document.addEventListener("keydown", e => {
-            if (this.open_selector) {
-                if (e.key.search(/^[a-zA-Z]$/) == 0 || e.key == " ") {
-                    this.hero_name += e.key;
-                    e.preventDefault();
-                    this.select_hero_for_letters();
-                } else if (e.key == "Backspace") {
-                    this.hero_name = this.hero_name.slice(0, this.hero_name.length - 1);
-                    this.select_hero_for_letters();
-                } else if (e.key == "Enter" || e.key == "Escape") {
-                    this.select_hero_for_letters();
-                    this.hide_selector(this.hero_id);
-                }
-            }
-        });
-    }
-
-    select_hero_for_letters() {
-        let one_hero = 0;
-        this.plot_hero_select.innerHTML = this.hero_name;
-        this.heroes_img.forEach(hero_img => {
-            if (hero_img.title.toLowerCase().search(this.hero_name.toLowerCase()) != -1) {
-                hero_img.style.opacity = "100%";
-                one_hero++;
-                this.hero_id = hero_img.id;
-            } else {
-                hero_img.style.opacity = "10%";
-            }
-            if (one_hero != 1) this.hero_id = "";
-        });
-    }
-
-    show_selector() {
-        this.div.style.display = "flex";
-        this.open_selector = true;
-        this.plot_hero_select.innerHTML = "";
-        this.hero_name = "";
-        this.hero_id = "";
-        this.select_hero_for_letters();
-    }
-
-    hide_selector(id) {
-        this.hero_id = id;
-        if (id == "") {
-            this.hero_name = "";
-            this.plot.drawing();
-            this.plot_hero_select.innerHTML = "Все герои";
-            this.heroes_img.forEach(hero_img => {
-                hero_img.style.opacity = "100%";
-            });
-        } else {
-            this.hero_name = this.heroes[id].localized_name;
-            this.plot.drawing(id);
-            this.plot_hero_select.innerHTML = this.heroes[id].localized_name;
-            this.heroes_img.forEach(hero_img => {
-                if (hero_img.id == id) {
-                    hero_img.style.opacity = "100%";
-                } else {
-                    hero_img.style.opacity = "10%";
-                }
-            });
-        }
-        this.div.style.display = "none";
-        this.open_selector = false;
     }
 }

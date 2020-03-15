@@ -8,13 +8,43 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    min-width: 1400px;
+    min-width: 1405px;
 }
 
 .header {
     height: 50px;
+    visibility: hidden;
+    display: flex;
 }
 
+.loading {
+    font-size: 30px;
+    margin: auto;
+    padding: 10px;
+    animation-duration: 2s;
+    animation-iteration-count: infinite;
+    animation-name: coloring;
+}
+
+@keyframes coloring {
+    0% {
+        color: azure;
+    }
+    50% {
+        color: transparent;
+    }
+    100% {
+        color: azure;
+    }
+}
+
+.dont-load {
+    font-size: 30px;
+    margin: auto;
+    padding: 10px;
+    color: red;
+}
+  
 .content {
     flex-grow: 1;
     display: flex;
@@ -22,105 +52,167 @@ body {
     align-content: center;
     justify-content: center;
     flex-direction: column;
+    visibility: visible;
+}
+
+.filter {
+    display: flex;
+    flex-direction: column;
+    color: azure;
+}
+
+.filter-head {
+    opacity: 0.2;
+    margin-bottom: 10px;
+}
+
+.filter-body {
+    display: flex;
+    font-size: 24px;
+    align-items: start;
+    height: 100px;
+}
+
+.not-filtered {
+    opacity: 0.3;
+}
+
+.current-select {
+    font-size: 22px;
+    cursor: pointer;
+}
+
+.selector-head {
+    display: flex;
+    margin-right: 5px;
+}
+
+.filter-cancel {
+    margin-left: 10px;
+    border-radius: 15px;
+    padding-left: 5px;
+    padding-right: 5px;
+    color: red;
+    opacity: 0.8;
+    cursor: pointer;
+}
+
+.hide{
+    height: 0;
+    overflow: hidden;
     visibility: hidden;
+}
+
+.select-body {
+    position: relative;
+}
+
+.select-body:active .select-list {
+    display: block;
+}
+
+.select-list {
+    position: absolute;
+    z-index: 200;
+    background-color: #3b414d;
+    max-height: 220px;
+    overflow-y: auto;
+    width: 225px;
+}
+
+.select-list div {
+    padding: 10px;
+}
+
+.select-list div:hover {
+    background-color: #475050;
+}
+
+.team-selector {
+    position: relative;
+    width: 160px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.current-team {
+}
+
+.result-selector {
+    width: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.duration-selector{
+    width: 266px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+.hero-selector {
+    width: 200px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+.hero-list {
+    background-color: #3b414d;
+    z-index: 200;
+    display: flex;
+    flex-wrap: wrap;
+    width: 800px;
+    position: absolute;
+    top: 24px;
+    left: -360px;
+}
+
+.all-hero {
+    width: 378px;
+    height: 25px;
+    color: azure;
+    text-align: center;
+    font-size: 20px;
+}
+
+.hero-list img {
+    height: 28px;
+    width: 50px;
+}
+
+.game-mode-selector{
+    width: 180px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+
+.lobby-type-selector{
+    width: 130px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .table {
     position: relative;
     flex-direction: column;
     display: flex;
-}
-
-.row {
-    display: flex;
-}
-
-.cell {
-    position: relative;
-    background-color: rgb(255, 247, 232);
-    width: 34px;
-    height: 28px;
-    text-align: center;
-    font-size: 20px;
-    display: flex;
-    margin-left: 2px;
-    margin-bottom: 2px;
-}
-
-.player-name {
-    background-color: rgb(255, 247, 232);
-    width: 120px;
-    height: 28px;
-    font-size: 20px;
-    padding-left: 5px;
-    display: flex;
-}
-
-.margin-auto {
-    margin: auto;
-}
-
-.player-name-container {
-    margin-top: 5px;
-}
-
-.winrate-cell {
-    position: relative;
-    background-color: rgb(255, 247, 232);
-    width: 90px;
-    height: 28px;
-    font-size: 20px;
-    margin-left: 2px;
-    margin-bottom: 2px;
-    display: flex;
-}
-
-.winrate-cell:hover .month-pop-up {
-    display: flex;
-}
-
-.month-pop-up {
-    position: absolute;
-    display: none;
-    z-index: 10;
-    left: -220px;
-    background-color: #3b414d;
-    flex-direction: column;
-    font-size: 20px;
-    cursor: default;
-    width: 220px;
-    max-height: 295px;
-    overflow-y: auto;
-}
-
-.month-pop-up-row {
-    display: flex;
     align-items: center;
-    margin-bottom: 5px;
-    background-color: #161e27;
-}
-
-.pop-up-winrate-cell {
-    height: 20px;
-    width: 81px;
-    padding-left: 5px;
-    text-align: center;
-}
-
-.win {
-    color: darkgreen;
-    margin: auto;
-}
-
-.loose {
-    color: red;
-    margin: auto;
 }
 
 .date-selector {
     display: flex;
     font-size: 25px;
     align-items: center;
+    margin-bottom: 5px;
 }
 
 .date-box {
@@ -215,6 +307,99 @@ body {
     color: azure;
 }
 
+.row {
+    display: flex;
+}
+
+.cell {
+    position: relative;
+    background-color: rgb(255, 247, 232);
+    width: 34px;
+    height: 28px;
+    text-align: center;
+    font-size: 20px;
+    display: flex;
+    margin-left: 2px;
+    margin-bottom: 2px;
+}
+
+
+
+.player-name {
+    background-color: rgb(255, 247, 232);
+    width: 120px;
+    height: 28px;
+    font-size: 20px;
+    padding-left: 5px;
+    display: flex;
+}
+
+.player-name-select {
+    background-color: mediumaquamarine;
+}
+
+.margin-auto {
+    margin: auto;
+}
+
+.player-name-container {
+    margin-top: 5px;
+}
+
+.winrate-cell {
+    position: relative;
+    background-color: rgb(255, 247, 232);
+    width: 90px;
+    height: 28px;
+    font-size: 20px;
+    margin-left: 2px;
+    margin-bottom: 2px;
+    display: flex;
+}
+
+.winrate-cell:hover .month-pop-up {
+    display: flex;
+}
+
+.month-pop-up {
+    position: absolute;
+    display: none;
+    z-index: 10;
+    left: -220px;
+    background-color: #3b414d;
+    flex-direction: column;
+    font-size: 20px;
+    cursor: default;
+    width: 220px;
+    max-height: 295px;
+    overflow-y: auto;
+}
+
+.month-pop-up-row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+    background-color: #161e27;
+}
+
+.pop-up-winrate-cell {
+    height: 20px;
+    width: 81px;
+    padding-left: 5px;
+    text-align: center;
+}
+
+.win {
+    color: darkgreen;
+    margin: auto;
+}
+
+.loose {
+    color: red;
+    margin: auto;
+}
+
+
 .selected {
     color: azure;
 }
@@ -304,10 +489,9 @@ body {
     color: red;
 }
 
-.plots {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+.table-footer {
+    color: azure;
+    cursor: pointer;
 }
 
 .plot {
@@ -325,7 +509,7 @@ body {
 }
 
 .plot-body {
-    width: 1300px;
+    width: 1405px;
     overflow: hidden;
     background-color: #eff4f9;
     height: 360px;
@@ -340,7 +524,6 @@ body {
 }
 
 .footer {
-    height: 50px;
 }
 
 .plot-pop-up {
@@ -356,39 +539,6 @@ body {
     width: 50px;
 }
 
-.header {
-    display: flex;
-}
-
-.loading {
-    font-size: 30px;
-    margin: auto;
-    padding: 10px;
-
-    animation-duration: 2s;
-    animation-iteration-count: infinite;
-    animation-name: coloring;
-}
-
-@keyframes coloring {
-    0% {
-        color: azure;
-    }
-    50% {
-        color: transparent;
-    }
-    100% {
-        color: azure;
-    }
-}
-
-.dont-load {
-    font-size: 30px;
-    margin: auto;
-    padding: 10px;
-    color: red;
-}
-
 .plot-cover {
     position: absolute;
     top: 0;
@@ -399,34 +549,4 @@ body {
     cursor: all-scroll;
 }
 
-.hero-selector {
-    display: flex;
-    flex-wrap: wrap;
-    width: 378px;
-    position: absolute;
-    background-color: #3b414d;
-    z-index: 20;
-    display: none;
-    left: 0;
-    top: 25px;
-}
 
-.all-hero {
-    width: 378px;
-    height: 25px;
-    color: azure;
-    text-align: center;
-    font-size: 20px;
-}
-
-.hero-selector img {
-    height: 25px;
-    width: 42px;
-}
-
-.plot-hero-select {
-    position: absolute;
-    color: azure;
-    font-size: 20px;
-    left: 0;
-}

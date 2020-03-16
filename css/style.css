@@ -13,7 +13,6 @@ body {
 
 .header {
     height: 50px;
-    visibility: hidden;
     display: flex;
 }
 
@@ -52,7 +51,7 @@ body {
     align-content: center;
     justify-content: center;
     flex-direction: column;
-    visibility: visible;
+    visibility: hidden;
 }
 
 .filter {

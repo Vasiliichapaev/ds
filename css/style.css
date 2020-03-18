@@ -535,7 +535,9 @@ body {
 
 .plot-pop-up-details {
     position: absolute;
-    width: 50px;
+    padding: 5px;
+    background-color: mediumaquamarine;
+    opacity: 0.9;
 }
 
 .plot-cover {

@@ -36,14 +36,6 @@ class Main {
         this.players.forEach(player => player.filter_games());
     }
 
-    add_new_player(player_data) {
-        const player = new Player(this, player_data);
-        this.players.push(player); 
-        player.load_games().then(() => {
-            const row = this.table.add_row(player);
-            row.calculation();
-        });
-    }
 
 }
 
@@ -460,6 +452,20 @@ class Table {
             row.div.children[0].classList.remove("player-name-select")
         });
     }
+
+    add_new_row(name, id) {
+        const player_data = {
+            name: name,
+            accounts: [{id: id}]
+        };
+        const player = new Player(this.main, player_data);
+        main.players.push(player); 
+        player.load_games().then(() => {
+            const row = this.add_row(player);
+            row.calculation();
+        });
+    }
+
 }
 
 

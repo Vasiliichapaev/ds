@@ -1095,6 +1095,12 @@ class PlotPopUP extends Div {
         const game = this.games[game_number - 1];
         const date = new Date(game.start_time * 1000).toLocaleDateString("ru");
 
+        this.heroes = this.plot.main.filter.hero_selector.heroes;
+        let img_url = this.heroes[game.hero_id].img;
+        let hero_img = document.createElement("img");
+        hero_img.src = `https://api.opendota.com${img_url}`;
+        hero_img.height = 45;
+
         let offset = -100;
         if (game_number < 26) offset = 20;
         x = game_number * this.plot.delta - 1;
@@ -1105,6 +1111,7 @@ class PlotPopUP extends Div {
         this.plot_pop_up_details.innerHTML = `<p>${game_number}</p><p>${game.current_y}</p><p>${date}</p>`;
         this.plot_pop_up_details.style.top = `${y}px`;
         this.plot_pop_up_details.style.left = `${offset}px`;
+        this.plot_pop_up_details.append(hero_img)
         this.div.style.left = `${x}px`;
         this.div.style.display = "flex";
 

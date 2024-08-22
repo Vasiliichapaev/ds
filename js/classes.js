@@ -319,9 +319,13 @@ class HeroSelector extends Selector {
     add_heroes_in_list() {
         for (let id in this.heroes) {
             let img_url = this.heroes[id].img;
+            img_url = img_url.split("/").pop();
+            img_url = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" + img_url
             let hero_img = document.createElement("img");
             hero_img.addEventListener("click", e => this.select(e));
-            hero_img.src = `https://api.opendota.com${img_url}`;
+            //hero_img.src = `https://api.opendota.com${img_url}`;
+            //hero_img.src = `https://api.opendota.com${img_url}`;
+            hero_img.src = img_url
             hero_img.id = id;
             hero_img.title = this.heroes[id].localized_name;
             this.select_list.append(hero_img);
@@ -825,6 +829,8 @@ class PopUp extends Div {
 
         for (let game of this.cell.games) {
             let img_url = this.heroes[game.hero_id].img;
+            img_url = img_url.split("/").pop();
+            img_url = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" + img_url
             let pop_up_row = this.create_div("", "pop-up-row");
 
             let game_link = document.createElement("a");
@@ -839,7 +845,7 @@ class PopUp extends Div {
 
             let pop_up_hero = this.create_div("", "pop-up-hero");
             let pop_up_hero_img = document.createElement("img");
-            pop_up_hero_img.src = `https://api.opendota.com${img_url}`;
+            pop_up_hero_img.src = img_url;
             pop_up_hero.append(pop_up_hero_img);
             pop_up_row.append(pop_up_hero);
             this.div.append(pop_up_row);
@@ -902,11 +908,13 @@ class MonthPopUp extends Div {
 
         for (let hero of hero_games) {
             let img_url = this.heroes[hero[0]].img;
+            img_url = img_url.split("/").pop();
+            img_url = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" + img_url
             let pop_up_row = this.create_div("", "month-pop-up-row");
             let pop_up_hero = this.create_div("", "pop-up-hero");
             let pop_up_hero_img = document.createElement("img");
 
-            pop_up_hero_img.src = `https://api.opendota.com${img_url}`;
+            pop_up_hero_img.src = img_url;
             pop_up_hero.append(pop_up_hero_img);
             pop_up_row.append(pop_up_hero);
             this.div.append(pop_up_row);
@@ -1097,8 +1105,10 @@ class PlotPopUP extends Div {
 
         this.heroes = this.plot.main.filter.hero_selector.heroes;
         let img_url = this.heroes[game.hero_id].img;
+        img_url = img_url.split("/").pop();
+        img_url = "https://cdn.cloudflare.steamstatic.com/apps/dota2/images/dota_react/heroes/" + img_url
         let hero_img = document.createElement("img");
-        hero_img.src = `https://api.opendota.com${img_url}`;
+        hero_img.src = img_url;
         hero_img.height = 45;
 
         let offset = -100;

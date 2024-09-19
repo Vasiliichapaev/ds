@@ -58,7 +58,7 @@ const players_data = [
         ]
     },
     {
-        name: "RomanLoshak",
+        name: "RomaLoshak",
         accounts: [
             {
                 id: 127761457
